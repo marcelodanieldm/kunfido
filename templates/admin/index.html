@@ -1,0 +1,103 @@
+{% extends "admin/index.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .estadisticas-usuarios {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .estadisticas-usuarios h2 {
+            color: #417690;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #417690;
+            padding-bottom: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-left: 4px solid #417690;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-card.persona {
+            border-left-color: #28a745;
+        }
+        .stat-card.consorcio {
+            border-left-color: #007bff;
+        }
+        .stat-card.oficio {
+            border-left-color: #ffc107;
+        }
+        .stat-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        .stat-card .subtitle {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    {% if estadisticas_usuarios %}
+    <div class="estadisticas-usuarios">
+        <h2>📊 Estadísticas de Usuarios</h2>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total de Usuarios</h3>
+                <p class="number">{{ estadisticas_usuarios.total_usuarios }}</p>
+                <p class="subtitle">Activos: {{ estadisticas_usuarios.usuarios_activos }} | Inactivos: {{ estadisticas_usuarios.usuarios_inactivos }}</p>
+            </div>
+            
+            <div class="stat-card persona">
+                <h3>👤 Personas</h3>
+                <p class="number">{{ estadisticas_usuarios.por_rol.persona }}</p>
+                <p class="subtitle">Promedio: {{ estadisticas_usuarios.puntuaciones.promedio_persona }} ⭐</p>
+            </div>
+            
+            <div class="stat-card consorcio">
+                <h3>🏢 Consorcios</h3>
+                <p class="number">{{ estadisticas_usuarios.por_rol.consorcio }}</p>
+                <p class="subtitle">Promedio: {{ estadisticas_usuarios.puntuaciones.promedio_consorcio }} ⭐</p>
+            </div>
+            
+            <div class="stat-card oficio">
+                <h3>🔧 Oficios</h3>
+                <p class="number">{{ estadisticas_usuarios.por_rol.oficio }}</p>
+                <p class="subtitle">Promedio: {{ estadisticas_usuarios.puntuaciones.promedio_oficio }} ⭐</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <h3>⭐ Puntuación Promedio General</h3>
+            <p class="number">{{ estadisticas_usuarios.puntuaciones.promedio_general }}</p>
+            <p class="subtitle">Basado en {{ estadisticas_usuarios.total_usuarios }} usuarios</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    {{ block.super }}
+{% endblock %}
