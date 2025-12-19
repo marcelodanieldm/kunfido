@@ -1,0 +1,230 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selecciona tu rol - Kunfido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'kunfido-blue': '#1e3a8a',
+                        'kunfido-blue-light': '#3b82f6',
+                        'kunfido-emerald': '#10B981',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .card-role {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .card-role:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(30, 58, 138, 0.2);
+        }
+
+        .card-role.selected {
+            border-color: #1e3a8a;
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.3);
+        }
+
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Barra de Progreso -->
+    <div class="fixed top-0 left-0 w-full h-2 bg-gray-200 z-50">
+        <div class="progress-bar h-full bg-gradient-to-r from-blue-900 to-blue-500" style="width: 33.33%"></div>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 pt-16">
+        <div class="max-w-5xl w-full">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-black text-kunfido-blue mb-2">KUNFIDO</h1>
+                <div class="h-1 w-20 bg-kunfido-emerald mx-auto mb-6"></div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-3">
+                    ¿Cómo vas a usar Kunfido?
+                </h2>
+                <p class="text-lg text-gray-600">
+                    Seleccioná tu rol para personalizar tu experiencia
+                </p>
+                <div class="mt-4 text-sm text-gray-500">
+                    <span class="font-semibold">Paso 1 de 2</span> · Selección de Rol
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="mb-6">
+                    {% for message in messages %}
+                        <div class="rounded-lg p-4 {% if message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Formulario de Selección de Rol -->
+            <form method="POST" id="roleForm">
+                {% csrf_token %}
+                <input type="hidden" name="tipo_rol" id="tipo_rol" value="">
+
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <!-- Tarjeta Persona -->
+                    <div class="card-role bg-white rounded-2xl p-8 border-4 border-gray-200 text-center" 
+                         data-role="PERSONA"
+                         onclick="selectRole('PERSONA')">
+                        <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mb-6 mx-auto">
+                            <i class="fas fa-user text-kunfido-blue text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-kunfido-blue mb-3">Persona</h3>
+                        <p class="text-gray-600 mb-4 text-sm">
+                            Soy propietario o inquilino
+                        </p>
+                        <ul class="text-left text-gray-700 space-y-2 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Contratá profesionales de confianza</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Pagá con seguridad en USD</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Calificá a los profesionales</span>
+                            </li>
+                        </ul>
+                        <div class="mt-6 checkmark hidden">
+                            <i class="fas fa-check-circle text-kunfido-emerald text-3xl"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta Consorcio -->
+                    <div class="card-role bg-white rounded-2xl p-8 border-4 border-gray-200 text-center" 
+                         data-role="CONSORCIO"
+                         onclick="selectRole('CONSORCIO')">
+                        <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mb-6 mx-auto">
+                            <i class="fas fa-building text-kunfido-emerald text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-kunfido-blue mb-3">Consorcio</h3>
+                        <p class="text-gray-600 mb-4 text-sm">
+                            Administro un edificio o consorcio
+                        </p>
+                        <ul class="text-left text-gray-700 space-y-2 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Votación transparente de presupuestos</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Auditoría de cada peso</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Gestión democrática de arreglos</span>
+                            </li>
+                        </ul>
+                        <div class="mt-6 checkmark hidden">
+                            <i class="fas fa-check-circle text-kunfido-emerald text-3xl"></i>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta Oficio -->
+                    <div class="card-role bg-white rounded-2xl p-8 border-4 border-gray-200 text-center" 
+                         data-role="OFICIO"
+                         onclick="selectRole('OFICIO')">
+                        <div class="bg-yellow-100 w-20 h-20 rounded-full flex items-center justify-center mb-6 mx-auto">
+                            <i class="fas fa-tools text-yellow-600 text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-kunfido-blue mb-3">Oficio</h3>
+                        <p class="text-gray-600 mb-4 text-sm">
+                            Soy profesional de servicios
+                        </p>
+                        <ul class="text-left text-gray-700 space-y-2 text-sm">
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Cobrá en moneda estable (USD)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Construí tu reputación verificada</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check text-kunfido-emerald mr-2 mt-1"></i>
+                                <span>Accedé a más oportunidades</span>
+                            </li>
+                        </ul>
+                        <div class="mt-6 checkmark hidden">
+                            <i class="fas fa-check-circle text-kunfido-emerald text-3xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón Continuar -->
+                <div class="text-center">
+                    <button type="submit" 
+                            id="submitBtn"
+                            disabled
+                            class="bg-kunfido-emerald hover:bg-green-600 text-white font-bold text-lg px-12 py-4 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 disabled:transform-none">
+                        Continuar
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                    <p class="mt-4 text-sm text-gray-500">
+                        Podrás cambiar tu rol más adelante desde tu perfil
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let selectedRole = null;
+
+        function selectRole(role) {
+            selectedRole = role;
+            
+            // Remover selección de todas las tarjetas
+            document.querySelectorAll('.card-role').forEach(card => {
+                card.classList.remove('selected');
+                card.querySelector('.checkmark').classList.add('hidden');
+            });
+            
+            // Seleccionar la tarjeta clickeada
+            const selectedCard = document.querySelector(`.card-role[data-role="${role}"]`);
+            selectedCard.classList.add('selected');
+            selectedCard.querySelector('.checkmark').classList.remove('hidden');
+            
+            // Actualizar input hidden y habilitar botón
+            document.getElementById('tipo_rol').value = role;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        // Prevenir submit sin selección
+        document.getElementById('roleForm').addEventListener('submit', function(e) {
+            if (!selectedRole) {
+                e.preventDefault();
+                alert('Por favor, selecciona un rol antes de continuar.');
+            }
+        });
+    </script>
+</body>
+</html>

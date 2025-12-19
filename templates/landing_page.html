@@ -1,0 +1,781 @@
+{% load static %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kunfido - La primera plataforma que vence a la inflación y la desconfianza</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'kunfido-blue': '#0F2847',
+                        'kunfido-blue-light': '#1a3a5f',
+                        'kunfido-emerald': '#10B981',
+                        'kunfido-emerald-dark': '#059669',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(16, 185, 129, 0.7);
+            }
+        }
+
+        .btn-hover-scale {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-hover-scale:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(15, 40, 71, 0.15);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #0F2847 0%, #1a3a5f 100%);
+        }
+
+        .step-line {
+            position: relative;
+        }
+
+        .step-line::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, #10B981 0%, transparent 100%);
+            left: 50%;
+            top: 50px;
+            transform: translateX(-50%);
+        }
+
+        @media (max-width: 768px) {
+            .step-line::after {
+                display: none;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .icon-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-white">
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-20 md:py-32 px-4 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-kunfido-emerald opacity-10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-kunfido-emerald opacity-10 rounded-full blur-3xl"></div>
+        
+        <div class="max-w-7xl mx-auto relative z-10">
+            <div class="text-center fade-in">
+                <!-- Logo -->
+                <div class="mb-8">
+                    <h1 class="text-5xl md:text-7xl font-black mb-2">KUNFIDO</h1>
+                    <div class="h-1 w-24 bg-kunfido-emerald mx-auto"></div>
+                </div>
+
+                <!-- Headline -->
+                <h2 class="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                    La primera plataforma de servicios que vence<br class="hidden md:block">
+                    a la <span class="gradient-text">inflación</span> y la <span class="gradient-text">desconfianza</span>
+                </h2>
+
+                <!-- Sub-headline -->
+                <p class="text-lg md:text-2xl text-gray-300 mb-10 max-w-4xl mx-auto leading-relaxed">
+                    Contratá profesionales, blindá tu presupuesto en moneda estable y gestioná arreglos de consorcio con votación transparente. <span class="text-kunfido-emerald font-semibold">Todo en un solo lugar.</span>
+                </p>
+
+                <!-- CTA Principal -->
+                <a href="{% provider_login_url 'google' %}" class="bg-kunfido-emerald hover:bg-kunfido-emerald-dark text-white font-bold text-lg px-10 py-5 rounded-full btn-hover-scale btn-glow inline-flex items-center space-x-3 shadow-2xl">
+                    <i class="fab fa-google"></i>
+                    <span>Comenzar ahora (Login con Google)</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+
+                <!-- Trust indicators -->
+                <div class="mt-12 flex flex-wrap justify-center items-center gap-8 text-sm text-gray-400">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-shield-alt text-kunfido-emerald"></i>
+                        <span>Pagos protegidos</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-lock text-kunfido-emerald"></i>
+                        <span>Escrow en cripto</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-check-circle text-kunfido-emerald"></i>
+                        <span>Transparencia total</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Puntos de Dolor -->
+    <section class="py-20 px-4 bg-gray-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-kunfido-blue mb-4">
+                    El Problema Argentino
+                </h2>
+                <p class="text-xl text-gray-600">¿Te suena familiar?</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                <!-- El Caos Actual -->
+                <div class="bg-red-50 border-4 border-red-200 rounded-2xl p-8 relative">
+                    <div class="absolute -top-5 left-8 bg-red-500 text-white px-4 py-2 rounded-full font-bold text-sm">
+                        ❌ SIN KUNFIDO
+                    </div>
+                    <h3 class="text-2xl font-bold text-red-700 mb-6 mt-4">El Caos de Siempre</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                            <span class="text-gray-700"><strong>Presupuestos que vencen:</strong> Te pasan un precio hoy, mañana vale 30% más</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                            <span class="text-gray-700"><strong>Profesionales fantasma:</strong> "Vengo el martes" y nunca más aparecen</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                            <span class="text-gray-700"><strong>Consorcios opacos:</strong> No sabés en qué se gastan los fondos comunes</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-times-circle text-red-500 mt-1"></i>
+                            <span class="text-gray-700"><strong>Cero garantías:</strong> Pagás por adelantado y cruzás los dedos</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- La Solución Kunfido -->
+                <div class="bg-green-50 border-4 border-kunfido-emerald rounded-2xl p-8 relative">
+                    <div class="absolute -top-5 left-8 bg-kunfido-emerald text-white px-4 py-2 rounded-full font-bold text-sm">
+                        ✓ CON KUNFIDO
+                    </div>
+                    <h3 class="text-2xl font-bold text-kunfido-emerald-dark mb-6 mt-4">La Nueva Era</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-kunfido-emerald mt-1"></i>
+                            <span class="text-gray-700"><strong>Precio blindado:</strong> Trabajos cotizados en USD estable, cero sorpresas</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-kunfido-emerald mt-1"></i>
+                            <span class="text-gray-700"><strong>Reputación verificada:</strong> Profesionales con historial de cumplimiento real</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-kunfido-emerald mt-1"></i>
+                            <span class="text-gray-700"><strong>Votación democrática:</strong> Cada vecino decide y audita cada peso gastado</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-kunfido-emerald mt-1"></i>
+                            <span class="text-gray-700"><strong>Pago protegido:</strong> El dinero se libera solo cuando el trabajo está listo</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Roles (Tres Pilares) -->
+    <section class="py-20 px-4 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-kunfido-blue mb-4">
+                    Tres Formas de Usar Kunfido
+                </h2>
+                <p class="text-xl text-gray-600">Elegí tu rol y empezá a confiar</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Tarjeta Persona -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 card-hover border-2 border-gray-100">
+                    <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mb-6 mx-auto icon-float">
+                        <i class="fas fa-user text-kunfido-blue text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-kunfido-blue mb-4 text-center">Persona</h3>
+                    <p class="text-gray-600 text-center mb-6 text-lg font-semibold">
+                        Encontrá confianza. Pagá con seguridad.
+                    </p>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-star text-kunfido-emerald mt-1"></i>
+                            <span>Buscá profesionales con reputación verificada</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-dollar-sign text-kunfido-emerald mt-1"></i>
+                            <span>Presupuesto congelado en USD hasta completar el trabajo</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-chart-line text-kunfido-emerald mt-1"></i>
+                            <span>Calificá por cumplimiento real: tiempo, calidad, comunicación</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-shield-alt text-kunfido-emerald mt-1"></i>
+                            <span>Protección total: pagás solo si quedás conforme</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Tarjeta Consorcio -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 card-hover border-2 border-kunfido-emerald">
+                    <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mb-6 mx-auto icon-float">
+                        <i class="fas fa-building text-kunfido-emerald text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-kunfido-emerald-dark mb-4 text-center">Consorcio</h3>
+                    <p class="text-gray-600 text-center mb-6 text-lg font-semibold">
+                        Democracia digital. Transparencia total.
+                    </p>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-vote-yea text-kunfido-emerald mt-1"></i>
+                            <span>Subí presupuestos y votá con todos los vecinos</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-file-invoice-dollar text-kunfido-emerald mt-1"></i>
+                            <span>Auditá cada peso: de dónde sale y adónde va</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-bell text-kunfido-emerald mt-1"></i>
+                            <span>Recibí alertas si hay atrasos o problemas</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-handshake text-kunfido-emerald mt-1"></i>
+                            <span>Fin de las gestiones opacas: todo registrado y visible</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Tarjeta Oficio -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 card-hover border-2 border-gray-100">
+                    <div class="bg-yellow-100 w-20 h-20 rounded-full flex items-center justify-center mb-6 mx-auto icon-float">
+                        <i class="fas fa-tools text-yellow-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-kunfido-blue mb-4 text-center">Oficio</h3>
+                    <p class="text-gray-600 text-center mb-6 text-lg font-semibold">
+                        Valorá tu trabajo. Protegé tus ganancias.
+                    </p>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-coins text-kunfido-emerald mt-1"></i>
+                            <span>Cobrá en moneda estable: tu trabajo no pierde valor</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-trophy text-kunfido-emerald mt-1"></i>
+                            <span>Construí una reputación imbatible con cada trabajo</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-clock text-kunfido-emerald mt-1"></i>
+                            <span>Sistema de justificación de atrasos: se valora tu comunicación</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <i class="fas fa-rocket text-kunfido-emerald mt-1"></i>
+                            <span>Accedé a más clientes y mejores oportunidades</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- El Diferencial Estratégico (Crypto-Shield) -->
+    <section class="py-20 px-4 bg-kunfido-blue text-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <div class="inline-block bg-kunfido-emerald px-6 py-2 rounded-full text-sm font-bold mb-4">
+                    🛡️ EL SECRETO DE KUNFIDO
+                </div>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                    El Sistema de Escrow Cripto
+                </h2>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    Tu dinero congelado en paridad USD hasta que el trabajo esté completo. Así de simple. Así de seguro.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <!-- Paso 1 -->
+                <div class="bg-kunfido-blue-light rounded-2xl p-8 text-center">
+                    <div class="bg-kunfido-emerald w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                        1
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Blindaje del Precio</h3>
+                    <p class="text-gray-300">
+                        El cliente deposita el monto en USDT. El precio queda fijado en moneda estable, sin importar lo que pase con el peso.
+                    </p>
+                </div>
+
+                <!-- Paso 2 -->
+                <div class="bg-kunfido-blue-light rounded-2xl p-8 text-center">
+                    <div class="bg-kunfido-emerald w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                        2
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Fondos Bloqueados</h3>
+                    <p class="text-gray-300">
+                        El dinero queda en un contrato inteligente. Ni el cliente puede retirarlo, ni el profesional puede tocarlo.
+                    </p>
+                </div>
+
+                <!-- Paso 3 -->
+                <div class="bg-kunfido-blue-light rounded-2xl p-8 text-center">
+                    <div class="bg-kunfido-emerald w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                        3
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Liberación por Conformidad</h3>
+                    <p class="text-gray-300">
+                        Solo cuando ambas partes confirman que el trabajo está listo, el pago se libera automáticamente al profesional.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Visualización del flujo -->
+            <div class="bg-white rounded-2xl p-8 text-kunfido-blue">
+                <div class="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0 md:space-x-4">
+                    <div class="flex-1 text-center">
+                        <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-user text-2xl"></i>
+                        </div>
+                        <p class="font-bold">Cliente deposita</p>
+                        <p class="text-sm text-gray-600">$10,000 USD</p>
+                    </div>
+
+                    <div class="text-kunfido-emerald text-3xl">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+
+                    <div class="flex-1 text-center">
+                        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-lock text-kunfido-emerald text-2xl"></i>
+                        </div>
+                        <p class="font-bold">Escrow seguro</p>
+                        <p class="text-sm text-gray-600">Smart Contract</p>
+                    </div>
+
+                    <div class="text-kunfido-emerald text-3xl">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+
+                    <div class="flex-1 text-center">
+                        <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-tools text-yellow-600 text-2xl"></i>
+                        </div>
+                        <p class="font-bold">Profesional trabaja</p>
+                        <p class="text-sm text-gray-600">Con tranquilidad</p>
+                    </div>
+
+                    <div class="text-kunfido-emerald text-3xl">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+
+                    <div class="flex-1 text-center">
+                        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-check-circle text-kunfido-emerald text-2xl"></i>
+                        </div>
+                        <p class="font-bold">Pago liberado</p>
+                        <p class="text-sm text-gray-600">Automático</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <p class="text-xl text-kunfido-emerald font-bold">
+                    🔐 Resultado: Cero desconfianza. Máxima protección. Win-Win garantizado.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- El Reloj de la Verdad (Funcionamiento) -->
+    <section class="py-20 px-4 bg-gray-50">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-kunfido-blue mb-4">
+                    ⏰ El Reloj de la Verdad
+                </h2>
+                <p class="text-xl text-gray-600">Cómo funciona Kunfido de punta a punta</p>
+            </div>
+
+            <div class="space-y-8">
+                <!-- Paso 1 -->
+                <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 step-line">
+                    <div class="bg-kunfido-emerald text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0 mx-auto md:mx-0">
+                        1
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 flex-1">
+                        <h3 class="text-xl font-bold text-kunfido-blue mb-2">Publicás tu necesidad</h3>
+                        <p class="text-gray-600">Describís el trabajo que necesitás: arreglo de plomería, pintura, instalación eléctrica, o cualquier servicio de consorcio.</p>
+                    </div>
+                </div>
+
+                <!-- Paso 2 -->
+                <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 step-line">
+                    <div class="bg-kunfido-emerald text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0 mx-auto md:mx-0">
+                        2
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 flex-1">
+                        <h3 class="text-xl font-bold text-kunfido-blue mb-2">Recibís pujas transparentes</h3>
+                        <p class="text-gray-600">Profesionales verificados te envían propuestas con precio en USD, tiempo estimado y su historial de reputación.</p>
+                    </div>
+                </div>
+
+                <!-- Paso 3 -->
+                <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 step-line">
+                    <div class="bg-kunfido-emerald text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0 mx-auto md:mx-0">
+                        3
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 flex-1">
+                        <h3 class="text-xl font-bold text-kunfido-blue mb-2">Votación y aceptación</h3>
+                        <p class="text-gray-600">Si es un trabajo de consorcio, todos los vecinos votan. Si es personal, aceptás la mejor propuesta.</p>
+                    </div>
+                </div>
+
+                <!-- Paso 4 -->
+                <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6 step-line">
+                    <div class="bg-kunfido-emerald text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0 mx-auto md:mx-0">
+                        4
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 flex-1">
+                        <h3 class="text-xl font-bold text-kunfido-blue mb-2">Seguimiento con alertas inteligentes</h3>
+                        <p class="text-gray-600">La plataforma monitorea el progreso. Si hay atrasos, el profesional puede justificarlos y tú decides si los aceptás.</p>
+                    </div>
+                </div>
+
+                <!-- Paso 5 -->
+                <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                    <div class="bg-kunfido-emerald text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold flex-shrink-0 mx-auto md:mx-0">
+                        5
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 flex-1 border-4 border-kunfido-emerald">
+                        <h3 class="text-xl font-bold text-kunfido-emerald-dark mb-2">Pago liberado por conformidad</h3>
+                        <p class="text-gray-600">Confirmás que el trabajo está bien hecho. El sistema libera el pago automáticamente y ambos se califican mutuamente.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 bg-kunfido-emerald text-white rounded-2xl p-8 text-center">
+                <p class="text-2xl font-bold mb-2">⚡ Todo automatizado. Cero burocracia.</p>
+                <p class="text-lg">La tecnología blockchain hace que cada paso sea transparente e irreversible.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonios / Casos de Uso -->
+    <section class="py-20 px-4 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-kunfido-blue mb-4">
+                    Lo que dicen nuestros usuarios
+                </h2>
+                <p class="text-xl text-gray-600">Historias reales de confianza recuperada</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Testimonio 1 -->
+                <div class="bg-gray-50 rounded-2xl p-8 relative">
+                    <div class="text-kunfido-emerald text-5xl mb-4">"</div>
+                    <p class="text-gray-700 mb-6 italic">
+                        "Contraté un electricista para el consorcio. El presupuesto se mantuvo igual durante 3 meses gracias al escrow en USD. Nunca más presupuestos que vencen al toque."
+                    </p>
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-kunfido-blue w-12 h-12 rounded-full flex items-center justify-center text-white font-bold">
+                            MR
+                        </div>
+                        <div>
+                            <p class="font-bold text-kunfido-blue">Martín R.</p>
+                            <p class="text-sm text-gray-600">Consorcio, Palermo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonio 2 -->
+                <div class="bg-gray-50 rounded-2xl p-8 relative">
+                    <div class="text-kunfido-emerald text-5xl mb-4">"</div>
+                    <p class="text-gray-700 mb-6 italic">
+                        "Como plomero, ahora cobro en USD y mi trabajo no pierde valor. Además, mi reputación en la plataforma me trae cada vez más clientes."
+                    </p>
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-kunfido-emerald w-12 h-12 rounded-full flex items-center justify-center text-white font-bold">
+                            CL
+                        </div>
+                        <div>
+                            <p class="font-bold text-kunfido-blue">Carlos L.</p>
+                            <p class="text-sm text-gray-600">Plomero, CABA</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonio 3 -->
+                <div class="bg-gray-50 rounded-2xl p-8 relative">
+                    <div class="text-kunfido-emerald text-5xl mb-4">"</div>
+                    <p class="text-gray-700 mb-6 italic">
+                        "Finalmente puedo ver en qué se gastan los fondos del edificio. La votación transparente cambió todo. Ya no hay más 'administraciones de amigos'."
+                    </p>
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-kunfido-blue w-12 h-12 rounded-full flex items-center justify-center text-white font-bold">
+                            SG
+                        </div>
+                        <div>
+                            <p class="font-bold text-kunfido-blue">Sofía G.</p>
+                            <p class="text-sm text-gray-600">Propietaria, Belgrano</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQs -->
+    <section class="py-20 px-4 bg-gray-50">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-kunfido-blue mb-4">
+                    Preguntas Frecuentes
+                </h2>
+            </div>
+
+            <div class="space-y-4">
+                <!-- FAQ 1 -->
+                <details class="bg-white rounded-xl shadow-md overflow-hidden group">
+                    <summary class="px-6 py-4 cursor-pointer font-bold text-kunfido-blue flex items-center justify-between hover:bg-gray-50 transition">
+                        <span>¿Necesito saber de criptomonedas para usar Kunfido?</span>
+                        <i class="fas fa-chevron-down transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-4 text-gray-700">
+                        <p>No. Kunfido maneja todo automáticamente. Solo necesitás crear una cuenta con Google y listo. Nosotros nos encargamos de la tecnología blockchain en el fondo.</p>
+                    </div>
+                </details>
+
+                <!-- FAQ 2 -->
+                <details class="bg-white rounded-xl shadow-md overflow-hidden group">
+                    <summary class="px-6 py-4 cursor-pointer font-bold text-kunfido-blue flex items-center justify-between hover:bg-gray-50 transition">
+                        <span>¿Cómo se protege mi dinero?</span>
+                        <i class="fas fa-chevron-down transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-4 text-gray-700">
+                        <p>Tu dinero queda bloqueado en un contrato inteligente (escrow cripto) en USDT. Ni tú ni el profesional pueden tocarlo hasta que ambos confirmen que el trabajo está completo. Es matemáticamente imposible que alguien se lo robe.</p>
+                    </div>
+                </details>
+
+                <!-- FAQ 3 -->
+                <details class="bg-white rounded-xl shadow-md overflow-hidden group">
+                    <summary class="px-6 py-4 cursor-pointer font-bold text-kunfido-blue flex items-center justify-between hover:bg-gray-50 transition">
+                        <span>¿Qué pasa si el profesional no termina el trabajo?</span>
+                        <i class="fas fa-chevron-down transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-4 text-gray-700">
+                        <p>Si el profesional no cumple o abandona el trabajo, podés iniciar una disputa. Nuestro sistema de mediación analiza el caso y, si corresponde, el dinero se te devuelve automáticamente. El profesional pierde puntos de reputación.</p>
+                    </div>
+                </details>
+
+                <!-- FAQ 4 -->
+                <details class="bg-white rounded-xl shadow-md overflow-hidden group">
+                    <summary class="px-6 py-4 cursor-pointer font-bold text-kunfido-blue flex items-center justify-between hover:bg-gray-50 transition">
+                        <span>¿Kunfido cobra comisiones?</span>
+                        <i class="fas fa-chevron-down transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-4 text-gray-700">
+                        <p>Sí, cobramos una pequeña comisión del 5% sobre cada transacción exitosa. Esto cubre los costos del escrow, la tecnología blockchain y el mantenimiento de la plataforma. Cero costos ocultos.</p>
+                    </div>
+                </details>
+
+                <!-- FAQ 5 -->
+                <details class="bg-white rounded-xl shadow-md overflow-hidden group">
+                    <summary class="px-6 py-4 cursor-pointer font-bold text-kunfido-blue flex items-center justify-between hover:bg-gray-50 transition">
+                        <span>¿Cómo funciona el sistema de votación en consorcios?</span>
+                        <i class="fas fa-chevron-down transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="px-6 pb-4 text-gray-700">
+                        <p>El administrador o cualquier propietario puede subir presupuestos a la plataforma. Todos los copropietarios reciben una notificación para votar. La propuesta con más votos gana. Todo queda registrado y es auditable por siempre.</p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Final -->
+    <section class="py-20 px-4 hero-gradient text-white">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                ¿Listo para confiar de nuevo?
+            </h2>
+            <p class="text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto">
+                Unite a la red de confianza más grande de Argentina. Miles de profesionales y clientes ya están trabajando sin miedo.
+            </p>
+
+            <a href="{% provider_login_url 'google' %}" class="bg-kunfido-emerald hover:bg-kunfido-emerald-dark text-white font-bold text-lg px-12 py-6 rounded-full btn-hover-scale btn-glow inline-flex items-center space-x-3 shadow-2xl mb-8">
+                <i class="fab fa-google text-2xl"></i>
+                <span>Crear cuenta con Google - Es gratis</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+
+            <div class="flex flex-col md:flex-row items-center justify-center gap-6 text-sm text-gray-400">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-kunfido-emerald"></i>
+                    <span>Gratis para empezar</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-kunfido-emerald"></i>
+                    <span>Sin tarjeta de crédito</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-check-circle text-kunfido-emerald"></i>
+                    <span>Registro en 30 segundos</span>
+                </div>
+            </div>
+
+            <!-- Opcional: Link alternativo para login tradicional -->
+            <div class="mt-8">
+                <p class="text-gray-400">¿Ya tenés cuenta? <a href="{% url 'account_login' %}" class="text-kunfido-emerald hover:underline">Ingresá aquí</a></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-kunfido-blue text-white py-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <!-- Logo y descripción -->
+                <div class="md:col-span-2">
+                    <h3 class="text-3xl font-black mb-3">KUNFIDO</h3>
+                    <p class="text-gray-400 mb-4">
+                        La primera plataforma de servicios que vence a la inflación y la desconfianza.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-kunfido-emerald transition">
+                            <i class="fab fa-instagram text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-kunfido-emerald transition">
+                            <i class="fab fa-twitter text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-kunfido-emerald transition">
+                            <i class="fab fa-linkedin text-2xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Enlaces -->
+                <div>
+                    <h4 class="font-bold mb-4">Plataforma</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-kunfido-emerald transition">Cómo funciona</a></li>
+                        <li><a href="#" class="hover:text-kunfido-emerald transition">Precios</a></li>
+                        <li><a href="#" class="hover:text-kunfido-emerald transition">Para profesionales</a></li>
+                        <li><a href="#" class="hover:text-kunfido-emerald transition">Para consorcios</a></li>
+                    </ul>
+                </div>
+
+                <!-- Soporte -->
+                <div>
+                    <h4 class="font-bold mb-4">Soporte</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-kunfido-emerald transition">Centro de ayuda</a></li>
+                        <li><a href="#" class="hover:text-kunfido-emerald transition">Términos y condiciones</a></li>
+                        <li><a href="#" class="hover:text-kunfido-emerald transition">Política de privacidad</a></li>
+                        <li><a href="#" class="hover:text-kunfido-emerald transition">Contacto</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-700 pt-8 text-center text-gray-400 text-sm">
+                <p>&copy; 2025 Kunfido. Todos los derechos reservados. Hecho con 💚 para Argentina.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll para enlaces internos
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animación de entrada para elementos cuando aparecen en viewport
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.card-hover, details').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

@@ -18,9 +18,28 @@ from datetime import timedelta
 
 def home(request):
     """
-    Vista principal de la aplicación.
+    Landing Page principal de Kunfido.
+    Si el usuario está autenticado, redirige al dashboard.
     """
-    return render(request, 'usuarios/home.html')
+    if request.user.is_authenticated:
+        return redirect('usuarios:dashboard_home')
+    return render(request, 'landing_page.html')
+
+
+def signup_choice(request):
+    """
+    Vista para mostrar las opciones de registro: Google o Email/Password.
+    Esta es la página intermedia antes del registro.
+    """
+    # Si el usuario ya está autenticado, redirigir al dashboard
+    if request.user.is_authenticated:
+        # Verificar si necesita completar onboarding
+        if hasattr(request.user, 'profile') and request.user.profile.tipo_rol:
+            return redirect('usuarios:dashboard_home')
+        else:
+            return redirect('usuarios:role_selection')
+    
+    return render(request, 'usuarios/signup_choice.html')
 
 
 @login_required
@@ -232,9 +251,182 @@ def dashboard(request):
 
 
 @login_required
+def get_dashboard_url(user):
+    """
+    Función helper que retorna la URL del dashboard según el rol del usuario.
+    """
+    if not hasattr(user, 'profile') or not user.profile.tipo_rol:
+        return 'usuarios:role_selection'
+    
+    role_dashboards = {
+        'PERSONA': 'usuarios:dashboard_home',
+        'CONSORCIO': 'usuarios:dashboard_home',
+        'OFICIO': 'usuarios:dashboard_home',
+    }
+    
+    return role_dashboards.get(user.profile.tipo_rol, 'usuarios:dashboard_home')
+
+
+@login_required
+def role_selection(request):
+    """
+    Vista para seleccionar el rol del usuario (Persona, Consorcio, Oficio).
+    Primera pantalla del onboarding después del registro.
+    """
+    # Crear perfil si no existe
+    if not hasattr(request.user, 'profile'):
+        UserProfile.objects.create(user=request.user, tipo_rol='')
+    
+    # Si ya tiene rol completo, redirigir al dashboard
+    profile = request.user.profile
+    if profile.tipo_rol and profile.tipo_rol != '':
+        # Verificar si ya completó el formulario de onboarding
+        if profile.tipo_rol == 'PERSONA' and profile.zona and profile.telefono:
+            return redirect(get_dashboard_url(request.user))
+        elif profile.tipo_rol == 'CONSORCIO' and profile.direccion and profile.matricula:
+            return redirect(get_dashboard_url(request.user))
+        elif profile.tipo_rol == 'OFICIO' and profile.rubro and profile.cuit and profile.zona:
+            return redirect(get_dashboard_url(request.user))
+        else:
+            # Tiene rol pero no completó el formulario
+            return redirect('usuarios:onboarding_form')
+    
+    if request.method == 'POST':
+        tipo_rol = request.POST.get('tipo_rol')
+        
+        if tipo_rol in ['PERSONA', 'CONSORCIO', 'OFICIO']:
+            profile.tipo_rol = tipo_rol
+            profile.save()
+            
+            messages.success(request, f'Has seleccionado el rol: {profile.get_tipo_rol_display()}')
+            # Redirigir al formulario de onboarding específico
+            return redirect('usuarios:onboarding_form')
+        else:
+            messages.error(request, 'Por favor, selecciona un rol válido.')
+    
+    return render(request, 'usuarios/role_selection.html')
+
+
+@login_required
+def onboarding_form(request):
+    """
+    Formulario dinámico de onboarding según el rol seleccionado.
+    Muestra diferentes campos según el tipo de rol elegido.
+    """
+    # Verificar que el usuario tenga perfil y rol
+    if not hasattr(request.user, 'profile'):
+        UserProfile.objects.create(user=request.user, tipo_rol='')
+    
+    profile = request.user.profile
+    
+    if not profile.tipo_rol or profile.tipo_rol == '':
+        messages.warning(request, 'Primero debes seleccionar un tipo de rol.')
+        return redirect('usuarios:role_selection')
+    
+    # Lista de rubros para profesionales de oficio
+    rubros_oficio = [
+        'Plomería',
+        'Electricidad',
+        'Pintura',
+        'Albañilería',
+        'Carpintería',
+        'Herrería',
+        'Gasista',
+        'Jardinería',
+        'Aire Acondicionado',
+        'Cerrajería',
+        'Techista',
+        'Otro'
+    ]
+    
+    if request.method == 'POST':
+        # Campos específicos por rol
+        if profile.tipo_rol == 'CONSORCIO':
+            direccion_edificio = request.POST.get('direccion_edificio', '').strip()
+            matricula_admin = request.POST.get('matricula_admin', '').strip()
+            
+            if not direccion_edificio or not matricula_admin:
+                messages.error(request, 'Por favor, completa todos los campos requeridos.')
+            else:
+                profile.direccion = direccion_edificio
+                profile.matricula = matricula_admin
+                profile.zona = direccion_edificio  # También guardamos en zona para búsquedas
+                profile.save()
+                
+                # Crear wallet inicial
+                Wallet.objects.get_or_create(
+                    user=request.user,
+                    defaults={
+                        'tipo_cuenta': 'USER',
+                        'balance_usdc': Decimal('1000.00')
+                    }
+                )
+                
+                messages.success(request, '¡Bienvenido a Kunfido! Tu perfil de Consorcio está completo.')
+                return redirect(get_dashboard_url(request.user))
+        
+        elif profile.tipo_rol == 'OFICIO':
+            rubro = request.POST.get('rubro', '').strip()
+            cuit = request.POST.get('cuit', '').strip()
+            zona = request.POST.get('zona', '').strip()
+            
+            if not rubro or not cuit or not zona:
+                messages.error(request, 'Por favor, completa todos los campos requeridos.')
+            else:
+                profile.rubro = rubro
+                profile.cuit = cuit
+                profile.zona = zona
+                profile.save()
+                
+                # Crear wallet inicial
+                Wallet.objects.get_or_create(
+                    user=request.user,
+                    defaults={
+                        'tipo_cuenta': 'USER',
+                        'balance_usdc': Decimal('1000.00')
+                    }
+                )
+                
+                messages.success(request, f'¡Bienvenido a Kunfido! Tu perfil de {rubro} está completo.')
+                return redirect(get_dashboard_url(request.user))
+        
+        elif profile.tipo_rol == 'PERSONA':
+            barrio = request.POST.get('barrio', '').strip()
+            telefono = request.POST.get('telefono', '').strip()
+            
+            if not barrio or not telefono:
+                messages.error(request, 'Por favor, completa todos los campos requeridos.')
+            else:
+                profile.zona = barrio
+                profile.telefono = telefono
+                profile.save()
+                
+                # Crear wallet inicial
+                Wallet.objects.get_or_create(
+                    user=request.user,
+                    defaults={
+                        'tipo_cuenta': 'USER',
+                        'balance_usdc': Decimal('1000.00')
+                    }
+                )
+                
+                messages.success(request, '¡Bienvenido a Kunfido! Tu perfil está completo.')
+                return redirect(get_dashboard_url(request.user))
+    
+    context = {
+        'profile': profile,
+        'tipo_rol': profile.tipo_rol,
+        'tipo_rol_display': profile.get_tipo_rol_display(),
+        'rubros_oficio': rubros_oficio,
+    }
+    
+    return render(request, 'usuarios/onboarding_form.html', context)
+
+
 def onboarding_rol(request):
     """
-    Vista para seleccionar o cambiar el tipo de rol del usuario.
+    Vista legacy para seleccionar o cambiar el tipo de rol del usuario.
+    DEPRECATED: Usar role_selection y onboarding_form en su lugar.
     """
     # Verificar si el usuario tiene perfil
     if not hasattr(request.user, 'profile'):

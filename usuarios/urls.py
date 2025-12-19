@@ -7,7 +7,14 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard-home/', views.dashboard_home, name='dashboard_home'),
-    path('onboarding/', views.onboarding_rol, name='onboarding_rol'),
+    
+    # Registro y Autenticación
+    path('signup/', views.signup_choice, name='signup_choice'),
+    
+    # Onboarding
+    path('onboarding/', views.onboarding_rol, name='onboarding_rol'),  # Legacy
+    path('role-selection/', views.role_selection, name='role_selection'),
+    path('onboarding-form/', views.onboarding_form, name='onboarding_form'),
     
     # Feed Público
     path('trabajos/', views.public_feed, name='public_feed'),

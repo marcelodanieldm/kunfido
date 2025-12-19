@@ -1,0 +1,270 @@
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Kunfido</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        
+        .btn-google {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-google:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
+        }
+        
+        .error-message {
+            display: none;
+            font-size: 0.875rem;
+            color: #dc2626;
+            margin-top: 0.25rem;
+        }
+        
+        .error-message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="max-w-md w-full">
+        <!-- Logo y Título -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold gradient-bg bg-clip-text text-transparent mb-2">
+                Kunfido
+            </h1>
+            <p class="text-gray-600 text-lg">
+                Crea tu cuenta y comienza
+            </p>
+        </div>
+
+        <!-- Contenedor Principal -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <!-- Botón de Google -->
+            <a href="{% provider_login_url 'google' %}" 
+               class="btn-google w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:border-blue-500 mb-6">
+                <svg class="w-6 h-6" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continuar con Google
+            </a>
+
+            <!-- Divisor -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-white text-gray-500 font-medium">O con tu email</span>
+                </div>
+            </div>
+
+            <!-- Formulario Email/Password -->
+            <form method="post" action="{% url 'account_signup' %}" id="signupForm" novalidate>
+                {% csrf_token %}
+                
+                <!-- Email -->
+                <div class="mb-4">
+                    <label for="id_email" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Email
+                    </label>
+                    <input type="email" 
+                           name="email" 
+                           id="id_email" 
+                           required
+                           class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                           placeholder="tu@email.com">
+                    <div class="error-message" id="emailError">
+                        Por favor, ingresa un email válido.
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-4">
+                    <label for="id_password1" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Contraseña
+                    </label>
+                    <input type="password" 
+                           name="password1" 
+                           id="id_password1" 
+                           required
+                           minlength="8"
+                           class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                           placeholder="Mínimo 8 caracteres">
+                    <div class="error-message" id="password1Error">
+                        La contraseña debe tener al menos 8 caracteres.
+                    </div>
+                </div>
+
+                <!-- Confirmar Password -->
+                <div class="mb-6">
+                    <label for="id_password2" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Confirmar Contraseña
+                    </label>
+                    <input type="password" 
+                           name="password2" 
+                           id="id_password2" 
+                           required
+                           class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                           placeholder="Repite tu contraseña">
+                    <div class="error-message" id="password2Error">
+                        Las contraseñas no coinciden.
+                    </div>
+                </div>
+
+                <!-- Botón Submit -->
+                <button type="submit" 
+                        class="w-full gradient-bg text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                    Crear Cuenta
+                </button>
+            </form>
+
+            <!-- Link a Login -->
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">
+                    ¿Ya tienes cuenta? 
+                    <a href="{% url 'account_login' %}" class="text-blue-600 font-semibold hover:underline">
+                        Inicia sesión
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>
+                Al registrarte, aceptas nuestros 
+                <a href="#" class="text-blue-600 hover:underline">Términos y Condiciones</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript para validación en tiempo real -->
+    <script>
+        const form = document.getElementById('signupForm');
+        const emailInput = document.getElementById('id_email');
+        const password1Input = document.getElementById('id_password1');
+        const password2Input = document.getElementById('id_password2');
+        
+        const emailError = document.getElementById('emailError');
+        const password1Error = document.getElementById('password1Error');
+        const password2Error = document.getElementById('password2Error');
+
+        // Validar email en tiempo real
+        emailInput.addEventListener('blur', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(this.value)) {
+                emailError.classList.add('show');
+                this.classList.add('border-red-500');
+            } else {
+                emailError.classList.remove('show');
+                this.classList.remove('border-red-500');
+            }
+        });
+
+        emailInput.addEventListener('input', function() {
+            if (emailError.classList.contains('show')) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailRegex.test(this.value)) {
+                    emailError.classList.remove('show');
+                    this.classList.remove('border-red-500');
+                }
+            }
+        });
+
+        // Validar longitud de contraseña en tiempo real
+        password1Input.addEventListener('input', function() {
+            if (this.value.length > 0 && this.value.length < 8) {
+                password1Error.classList.add('show');
+                this.classList.add('border-red-500');
+            } else {
+                password1Error.classList.remove('show');
+                this.classList.remove('border-red-500');
+            }
+        });
+
+        // Validar que las contraseñas coincidan
+        password2Input.addEventListener('input', function() {
+            if (this.value.length > 0 && this.value !== password1Input.value) {
+                password2Error.classList.add('show');
+                this.classList.add('border-red-500');
+            } else {
+                password2Error.classList.remove('show');
+                this.classList.remove('border-red-500');
+            }
+        });
+
+        // Validación al enviar el formulario
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Validar email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailInput.value)) {
+                emailError.classList.add('show');
+                emailInput.classList.add('border-red-500');
+                isValid = false;
+            }
+
+            // Validar contraseña
+            if (password1Input.value.length < 8) {
+                password1Error.classList.add('show');
+                password1Input.classList.add('border-red-500');
+                isValid = false;
+            }
+
+            // Validar que coincidan
+            if (password1Input.value !== password2Input.value) {
+                password2Error.classList.add('show');
+                password2Input.classList.add('border-red-500');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -37,6 +37,46 @@ class UserProfile(models.Model):
         help_text='Zona geográfica del usuario'
     )
     
+    # Campos adicionales para onboarding
+    telefono = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name='Teléfono',
+        help_text='Número de contacto del usuario'
+    )
+    
+    rubro = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='Rubro',
+        help_text='Especialidad del profesional (solo para Oficio)'
+    )
+    
+    cuit = models.CharField(
+        max_length=13,
+        blank=True,
+        null=True,
+        verbose_name='CUIT/CUIL',
+        help_text='CUIT o CUIL del profesional'
+    )
+    
+    matricula = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='Matrícula',
+        help_text='Matrícula profesional (para administradores de consorcio)'
+    )
+    
+    direccion = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Dirección',
+        help_text='Dirección del edificio o consorcio'
+    )
+    
     puntuacion = models.FloatField(
         default=0.0,
         validators=[MinValueValidator(0.0), MaxValueValidator(5.0)],

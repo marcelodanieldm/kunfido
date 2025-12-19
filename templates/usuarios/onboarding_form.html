@@ -1,0 +1,364 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completa tu perfil - Kunfido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'kunfido-blue': '#1e3a8a',
+                        'kunfido-blue-light': '#3b82f6',
+                        'kunfido-emerald': '#10B981',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .input-field {
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(30, 58, 138, 0.1);
+        }
+
+        .error-message {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Barra de Progreso -->
+    <div class="fixed top-0 left-0 w-full h-2 bg-gray-200 z-50">
+        <div class="h-full bg-gradient-to-r from-blue-900 to-blue-500" style="width: 66.67%"></div>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 pt-16">
+        <div class="max-w-2xl w-full">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-black text-kunfido-blue mb-2">KUNFIDO</h1>
+                <div class="h-1 w-20 bg-kunfido-emerald mx-auto mb-6"></div>
+                
+                <!-- Ícono según rol -->
+                <div class="mb-6">
+                    {% if tipo_rol == 'PERSONA' %}
+                        <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+                            <i class="fas fa-user text-kunfido-blue text-3xl"></i>
+                        </div>
+                    {% elif tipo_rol == 'CONSORCIO' %}
+                        <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+                            <i class="fas fa-building text-kunfido-emerald text-3xl"></i>
+                        </div>
+                    {% elif tipo_rol == 'OFICIO' %}
+                        <div class="bg-yellow-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+                            <i class="fas fa-tools text-yellow-600 text-3xl"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <h2 class="text-3xl font-bold text-gray-900 mb-3">
+                    Completa tu perfil de {{ tipo_rol_display }}
+                </h2>
+                <p class="text-lg text-gray-600">
+                    Solo te tomará un minuto
+                </p>
+                <div class="mt-4 text-sm text-gray-500">
+                    <span class="font-semibold">Paso 2 de 2</span> · Información del Perfil
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="mb-6 fade-in">
+                    {% for message in messages %}
+                        <div class="rounded-lg p-4 {% if message.tags == 'error' %}bg-red-100 text-red-700 error-message{% elif message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                            <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Formulario Dinámico -->
+            <form method="POST" id="onboardingForm" class="bg-white shadow-xl rounded-2xl p-8 fade-in">
+                {% csrf_token %}
+
+                <!-- Formulario para CONSORCIO -->
+                {% if tipo_rol == 'CONSORCIO' %}
+                    <div class="space-y-6">
+                        <div>
+                            <label for="direccion_edificio" class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-building text-kunfido-emerald mr-2"></i>
+                                Dirección del Edificio *
+                            </label>
+                            <input type="text" 
+                                   id="direccion_edificio" 
+                                   name="direccion_edificio" 
+                                   required
+                                   placeholder="Ej: Av. Corrientes 1234, CABA"
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-kunfido-emerald">
+                            <p class="mt-1 text-xs text-gray-500">Dirección completa del consorcio que administrás</p>
+                        </div>
+
+                        <div>
+                            <label for="matricula_admin" class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-id-card text-kunfido-emerald mr-2"></i>
+                                Matrícula de Administrador *
+                            </label>
+                            <input type="text" 
+                                   id="matricula_admin" 
+                                   name="matricula_admin" 
+                                   required
+                                   placeholder="Ej: CUCICBA 1234"
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-kunfido-emerald">
+                            <p class="mt-1 text-xs text-gray-500">Tu matrícula profesional de administrador</p>
+                        </div>
+                    </div>
+
+                <!-- Formulario para OFICIO -->
+                {% elif tipo_rol == 'OFICIO' %}
+                    <div class="space-y-6">
+                        <div>
+                            <label for="rubro" class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-briefcase text-kunfido-emerald mr-2"></i>
+                                Rubro / Especialidad *
+                            </label>
+                            <select id="rubro" 
+                                    name="rubro" 
+                                    required
+                                    class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-kunfido-emerald">
+                                <option value="">Selecciona tu especialidad</option>
+                                {% for rubro in rubros_oficio %}
+                                    <option value="{{ rubro }}">{{ rubro }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Tu especialidad principal</p>
+                        </div>
+
+                        <div>
+                            <label for="zona" class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-map-marker-alt text-kunfido-emerald mr-2"></i>
+                                Zona de Trabajo *
+                            </label>
+                            <input type="text" 
+                                   id="zona" 
+                                   name="zona" 
+                                   required
+                                   placeholder="Ej: Palermo, CABA"
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-kunfido-emerald">
+                            <p class="mt-1 text-xs text-gray-500">Zona principal donde trabajás</p>
+                        </div>
+
+                        <div>
+                            <label for="cuit" class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-file-invoice text-kunfido-emerald mr-2"></i>
+                                CUIT / CUIL *
+                            </label>
+                            <input type="text" 
+                                   id="cuit" 
+                                   name="cuit" 
+                                   required
+                                   placeholder="XX-XXXXXXXX-X"
+                                   pattern="\d{2}-\d{8}-\d{1}"
+                                   maxlength="13"
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-kunfido-emerald">
+                            <p class="mt-1 text-xs text-gray-500">Formato: 20-12345678-9</p>
+                            <p id="cuit-error" class="mt-1 text-xs text-red-600 hidden">Formato inválido. Usa: XX-XXXXXXXX-X</p>
+                        </div>
+                    </div>
+
+                <!-- Formulario para PERSONA -->
+                {% elif tipo_rol == 'PERSONA' %}
+                    <div class="space-y-6">
+                        <div>
+                            <label for="barrio" class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-home text-kunfido-emerald mr-2"></i>
+                                Barrio *
+                            </label>
+                            <input type="text" 
+                                   id="barrio" 
+                                   name="barrio" 
+                                   required
+                                   placeholder="Ej: Belgrano, Caballito, Palermo"
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-kunfido-emerald">
+                            <p class="mt-1 text-xs text-gray-500">Tu barrio o zona de residencia</p>
+                        </div>
+
+                        <div>
+                            <label for="telefono" class="block text-sm font-bold text-gray-700 mb-2">
+                                <i class="fas fa-phone text-kunfido-emerald mr-2"></i>
+                                Teléfono *
+                            </label>
+                            <input type="tel" 
+                                   id="telefono" 
+                                   name="telefono" 
+                                   required
+                                   placeholder="Ej: +54 9 11 1234-5678"
+                                   class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-kunfido-emerald">
+                            <p class="mt-1 text-xs text-gray-500">Número de contacto para coordinación de servicios</p>
+                            <p id="phone-error" class="mt-1 text-xs text-red-600 hidden">Ingresa un número válido</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Botones de Acción -->
+                <div class="mt-8 flex items-center justify-between">
+                    <a href="{% url 'usuarios:role_selection' %}" 
+                       class="text-gray-600 hover:text-kunfido-blue font-semibold transition">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Volver
+                    </a>
+                    
+                    <button type="submit" 
+                            id="submitBtn"
+                            class="bg-kunfido-emerald hover:bg-green-600 text-white font-bold text-lg px-10 py-3 rounded-full transition-all duration-300 transform hover:scale-105">
+                        Finalizar
+                        <i class="fas fa-check ml-2"></i>
+                    </button>
+                </div>
+
+                <p class="mt-6 text-center text-xs text-gray-500">
+                    <i class="fas fa-lock mr-1"></i>
+                    Tu información está protegida y será usada solo para mejorar tu experiencia
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Validación en tiempo real para CUIT
+        const cuitInput = document.getElementById('cuit');
+        if (cuitInput) {
+            cuitInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                
+                if (value.length >= 2 && value.length < 10) {
+                    value = value.slice(0, 2) + '-' + value.slice(2);
+                } else if (value.length >= 10) {
+                    value = value.slice(0, 2) + '-' + value.slice(2, 10) + '-' + value.slice(10, 11);
+                }
+                
+                e.target.value = value;
+                
+                // Validar formato
+                const pattern = /^\d{2}-\d{8}-\d{1}$/;
+                const errorMsg = document.getElementById('cuit-error');
+                
+                if (value.length === 13) {
+                    if (pattern.test(value)) {
+                        e.target.classList.remove('border-red-500');
+                        e.target.classList.add('border-green-500');
+                        errorMsg.classList.add('hidden');
+                    } else {
+                        e.target.classList.add('border-red-500');
+                        e.target.classList.remove('border-green-500');
+                        errorMsg.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
+        // Validación en tiempo real para Teléfono
+        const phoneInput = document.getElementById('telefono');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+                const value = e.target.value;
+                const errorMsg = document.getElementById('phone-error');
+                
+                // Validar mínimo de dígitos
+                const digitsOnly = value.replace(/\D/g, '');
+                
+                if (digitsOnly.length >= 8) {
+                    e.target.classList.remove('border-red-500');
+                    e.target.classList.add('border-green-500');
+                    errorMsg.classList.add('hidden');
+                } else if (value.length > 0) {
+                    e.target.classList.add('border-red-500');
+                    e.target.classList.remove('border-green-500');
+                    errorMsg.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Validación del formulario antes de enviar
+        document.getElementById('onboardingForm').addEventListener('submit', function(e) {
+            const form = e.target;
+            const inputs = form.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.classList.add('border-red-500');
+                    
+                    // Shake animation
+                    input.classList.add('error-message');
+                    setTimeout(() => {
+                        input.classList.remove('error-message');
+                    }, 500);
+                } else {
+                    input.classList.remove('border-red-500');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                
+                // Mostrar mensaje de error
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'rounded-lg p-4 bg-red-100 text-red-700 mb-6 error-message';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i>Por favor, completa todos los campos requeridos';
+                
+                form.insertBefore(errorDiv, form.firstChild);
+                
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 3000);
+            }
+        });
+
+        // Animación de campos al hacer focus
+        document.querySelectorAll('.input-field').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('fade-in');
+            });
+        });
+    </script>
+</body>
+</html>
