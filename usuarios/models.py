@@ -71,6 +71,15 @@ class UserProfile(models.Model):
     def nombre_completo(self):
         """Retorna el nombre completo del usuario."""
         return self.user.get_full_name() or self.user.username
+    
+    @property
+    def wallet(self):
+        """Retorna la wallet del usuario."""
+        try:
+            from .models import Wallet
+            return Wallet.objects.get(user=self.user)
+        except:
+            return None
 
 
 class JobOffer(models.Model):

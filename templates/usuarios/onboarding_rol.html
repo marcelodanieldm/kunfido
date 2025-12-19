@@ -4,50 +4,223 @@
 
 {% block extra_css %}
 <style>
-    .onboarding-container {
-        max-width: 1200px;
-        margin: 0 auto;
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
     }
-    
+
+    .onboarding-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem;
+    }
+
+    .onboarding-header {
+        text-align: center;
+        color: white;
+        margin-bottom: 3rem;
+    }
+
+    .onboarding-header h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .onboarding-header p {
+        font-size: 1.25rem;
+        opacity: 0.95;
+        font-weight: 500;
+    }
+
+    .roles-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
     .role-card {
-        border: 3px solid transparent;
-        border-radius: 15px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        height: 100%;
         background: white;
+        border-radius: 25px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 4px solid transparent;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        position: relative;
+    }
+
+    .role-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .role-card.selected {
+        border-color: #fff;
+        box-shadow: 0 20px 60px rgba(255, 255, 255, 0.4);
+    }
+
+    .role-card-header {
+        padding: 3rem 2rem;
+        text-align: center;
+        position: relative;
         overflow: hidden;
     }
-    
-    .role-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+
+    .role-card-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+        animation: shimmer 3s infinite;
     }
-    
-    .role-card.selected {
-        border-color: #667eea;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+
+    @keyframes shimmer {
+        0%, 100% { transform: translate(-25%, -25%); }
+        50% { transform: translate(25%, 25%); }
     }
-    
-    .role-card-header {
-        padding: 2rem;
-        text-align: center;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    }
-    
+
     .role-card.persona .role-card-header {
-        background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    
+
     .role-card.consorcio .role-card-header {
-        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     }
-    
+
     .role-card.oficio .role-card-header {
-        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     }
-    
+
     .role-icon {
+        font-size: 5rem;
+        color: white;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        position: relative;
+        z-index: 1;
+    }
+
+    .role-card-body {
+        padding: 2.5rem 2rem;
+    }
+
+    .role-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .role-subtitle {
+        font-size: 1rem;
+        color: #667eea;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .role-description {
+        color: #6c757d;
+        font-size: 1rem;
+        line-height: 1.6;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .role-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .role-features li {
+        padding: 0.75rem 0;
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .role-features li i {
+        color: #667eea;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .btn-select-role {
+        width: 100%;
+        padding: 1rem;
+        border: none;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 1.5rem;
+    }
+
+    .role-card.persona .btn-select-role {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .role-card.consorcio .btn-select-role {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .role-card.oficio .btn-select-role {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .btn-select-role:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-select-role:active {
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .onboarding-header h1 {
+            font-size: 2rem;
+        }
+
+        .onboarding-header p {
+            font-size: 1rem;
+        }
+
+        .roles-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .role-icon {
+            font-size: 4rem;
+        }
+
+        .role-card-header {
+            padding: 2rem 1.5rem;
+        }
+
+        .role-card-body {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
         font-size: 4rem;
         margin-bottom: 1rem;
     }
@@ -99,32 +272,144 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="onboarding-container">
-        <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold mb-3">
-                <i class="bi bi-stars text-warning"></i> ¡Bienvenido a Kunfido!
-            </h1>
-            <p class="lead text-muted">
-                Selecciona el tipo de perfil que mejor te represente para personalizar tu experiencia
-            </p>
-        </div>
+<div class="onboarding-container">
+    <!-- Header -->
+    <div class="onboarding-header">
+        <h1>¿Cómo quieres usar Kunfido?</h1>
+        <p>Selecciona el perfil que mejor se adapte a ti</p>
+    </div>
 
-        <form method="post" id="onboardingForm">
-            {% csrf_token %}
-            
-            <div class="row g-4 mb-4">
-                <!-- Tarjeta PERSONA -->
-                <div class="col-md-4">
-                    <label for="rol-persona" class="d-block">
-                        <input type="radio" name="tipo_rol" value="PERSONA" id="rol-persona" class="radio-input" required>
-                        <div class="role-card persona position-relative" data-role="persona">
-                            <div class="select-badge">
-                                <i class="bi bi-check-circle-fill"></i> Seleccionado
-                            </div>
-                            <div class="role-card-header">
-                                <div class="role-icon">
-                                    <i class="bi bi-person-circle"></i>
+    <!-- Roles Grid -->
+    <form method="post" id="onboardingForm">
+        {% csrf_token %}
+        
+        <div class="roles-grid">
+            <!-- Card PERSONA -->
+            <div class="role-card persona">
+                <div class="role-card-header">
+                    <div class="role-icon">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                </div>
+                <div class="role-card-body">
+                    <div class="role-subtitle">Persona</div>
+                    <h2 class="role-title">Busco un Profesional</h2>
+                    <p class="role-description">
+                        Publica trabajos, recibe propuestas de profesionales y gestiona tus proyectos de manera segura.
+                    </p>
+                    <ul class="role-features">
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Publica ofertas de trabajo</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Recibe múltiples propuestas</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Sistema de pagos seguro</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Califica profesionales</span>
+                        </li>
+                    </ul>
+                    <button type="submit" name="tipo_rol" value="PERSONA" class="btn-select-role">
+                        Seleccionar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card CONSORCIO -->
+            <div class="role-card consorcio">
+                <div class="role-card-header">
+                    <div class="role-icon">
+                        <i class="bi bi-building"></i>
+                    </div>
+                </div>
+                <div class="role-card-body">
+                    <div class="role-subtitle">Consorcio</div>
+                    <h2 class="role-title">Administro un Edificio</h2>
+                    <p class="role-description">
+                        Gestiona múltiples propiedades, coordina trabajos y administra profesionales de manera eficiente.
+                    </p>
+                    <ul class="role-features">
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Administra múltiples unidades</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Gestión centralizada</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Reportes y estadísticas</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Control de gastos</span>
+                        </li>
+                    </ul>
+                    <button type="submit" name="tipo_rol" value="CONSORCIO" class="btn-select-role">
+                        Seleccionar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card OFICIO -->
+            <div class="role-card oficio">
+                <div class="role-card-header">
+                    <div class="role-icon">
+                        <i class="bi bi-tools"></i>
+                    </div>
+                </div>
+                <div class="role-card-body">
+                    <div class="role-subtitle">Oficio</div>
+                    <h2 class="role-title">Ofrezco mis Servicios</h2>
+                    <p class="role-description">
+                        Encuentra trabajos, envía propuestas y construye tu reputación como profesional en la plataforma.
+                    </p>
+                    <ul class="role-features">
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Accede a trabajos disponibles</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Envía propuestas personalizadas</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Construye tu reputación</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Pagos garantizados</span>
+                        </li>
+                    </ul>
+                    <button type="submit" name="tipo_rol" value="OFICIO" class="btn-select-role">
+                        Seleccionar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Añadir interactividad a las cards
+    document.querySelectorAll('.role-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.zIndex = '10';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.zIndex = '1';
+        });
+    });
+</script>
                                 </div>
                                 <h3 class="fw-bold">Persona</h3>
                                 <p class="mb-0 text-muted">Usuario individual</p>

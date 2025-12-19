@@ -1,0 +1,268 @@
+<!-- Navbar Component -->
+<style>
+    .custom-navbar {
+        background: white !important;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        padding: 0.75rem 0;
+    }
+
+    .navbar-brand-custom {
+        font-weight: 800;
+        font-size: 1.75rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .navbar-brand-custom i {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2rem;
+    }
+
+    .nav-link-custom {
+        color: #495057 !important;
+        font-weight: 600;
+        padding: 0.5rem 1rem !important;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-link-custom:hover {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        color: #667eea !important;
+        transform: translateY(-2px);
+    }
+
+    .wallet-badge {
+        background: linear-gradient(135deg, #27ae60, #2ecc71) !important;
+        padding: 0.6rem 1.2rem !important;
+        border-radius: 15px !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .wallet-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border: 3px solid transparent;
+        background: linear-gradient(white, white) padding-box,
+                    linear-gradient(135deg, #667eea, #764ba2) border-box;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .user-avatar:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .dropdown-menu-custom {
+        border: none;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        border-radius: 15px;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .dropdown-item-custom {
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .dropdown-item-custom:hover {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white !important;
+        transform: translateX(5px);
+    }
+
+    .dropdown-item-custom i {
+        font-size: 1.25rem;
+        width: 24px;
+    }
+
+    .dropdown-divider {
+        margin: 0.5rem 0;
+        opacity: 0.3;
+    }
+
+    .user-dropdown-toggle {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .user-dropdown-toggle:hover {
+        border-color: #667eea;
+        background: white;
+    }
+
+    .user-name {
+        font-weight: 700;
+        color: #2c3e50;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 991px) {
+        .wallet-badge {
+            margin: 0.5rem 0;
+        }
+        
+        .user-dropdown-toggle {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<nav class="navbar navbar-expand-lg navbar-light custom-navbar sticky-top">
+    <div class="container">
+        <a class="navbar-brand-custom" href="{% url 'usuarios:home' %}">
+            <i class="bi bi-house-heart-fill"></i>
+            <span>Kunfido</span>
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-lg-center">
+                <li class="nav-item">
+                    <a class="nav-link-custom" href="{% url 'usuarios:public_feed' %}">
+                        <i class="bi bi-briefcase"></i>
+                        <span>Trabajos</span>
+                    </a>
+                </li>
+                
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link-custom" href="{% url 'usuarios:dashboard' %}">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    {% if user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link-custom text-primary" href="{% url 'usuarios:admin_custom_dashboard' %}">
+                                <i class="bi bi-bar-chart-line-fill"></i>
+                                <span>Admin</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <!-- Wallet Balance -->
+                    <li class="nav-item">
+                        <a href="{% url 'usuarios:wallet_detalle' %}" class="text-decoration-none">
+                            <span class="badge wallet-badge">
+                                <i class="bi bi-wallet2"></i>
+                                {% if user.profile.wallet %}
+                                    {{ user.profile.wallet.balance_usdc|floatformat:2 }}
+                                {% else %}
+                                    0.00
+                                {% endif %}
+                                <span style="opacity: 0.9; font-weight: 600;">USDC</span>
+                            </span>
+                        </a>
+                    </li>
+                    
+                    <!-- User Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle user-dropdown-toggle" href="#" id="userDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if user.socialaccount_set.all.0.get_avatar_url %}
+                                <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" 
+                                     alt="{{ user.username }}" 
+                                     class="user-avatar">
+                            {% else %}
+                                <i class="bi bi-person-circle" style="font-size: 2rem; color: #667eea;"></i>
+                            {% endif %}
+                            <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" href="#">
+                                    <i class="bi bi-person"></i>
+                                    <span>Mi Perfil</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" href="{% url 'usuarios:wallet_detalle' %}">
+                                    <i class="bi bi-wallet2"></i>
+                                    <span>Mi Billetera</span>
+                                </a>
+                            </li>
+                            {% if user.is_superuser %}
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" href="{% url 'usuarios:admin_custom_dashboard' %}">
+                                    <i class="bi bi-bar-chart-line-fill"></i>
+                                    <span>Dashboard Admin</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" href="{% url 'usuarios:onboarding_rol' %}">
+                                    <i class="bi bi-pencil-square"></i>
+                                    <span>Cambiar Rol</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom text-danger" href="{% url 'account_logout' %}">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Cerrar Sesión</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link-custom" href="{% url 'account_login' %}">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            <span>Iniciar Sesión</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-gradient btn-sm ms-2" href="{% url 'account_signup' %}" 
+                           style="padding: 0.6rem 1.5rem; border-radius: 12px; font-weight: 700;">
+                            Registrarse
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
