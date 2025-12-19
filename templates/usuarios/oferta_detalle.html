@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}{{ oferta.titulo }} - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .oferta-detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-box {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        height: 100%;
+    }
+    
+    .propuesta-card {
+        background: white;
+        border: 2px solid #f0f0f0;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .propuesta-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.15);
+    }
+    
+    .propuesta-card.mejor-oferta {
+        border-color: #28a745;
+        background: #d4edda;
+    }
+    
+    .version-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #ffc107;
+        color: #000;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header de la Oferta -->
+    <div class="oferta-detail-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-6 fw-bold mb-2">{{ oferta.titulo }}</h1>
+                <p class="mb-2">
+                    <i class="bi bi-geo-alt-fill"></i> {{ oferta.zona }}
+                </p>
+                <p class="mb-0">
+                    <i class="bi bi-person-circle"></i> Publicado por: 
+                    <strong>{{ oferta.creador.get_full_name|default:oferta.creador.username }}</strong>
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="fs-2 fw-bold mb-2">
+                    ${{ oferta.presupuesto_ars|floatformat:0 }}
+                </div>
+                <span class="badge bg-light text-dark px-3 py-2">
+                    <i class="bi bi-circle-fill text-success"></i> {{ oferta.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Descripción -->
+        <div class="col-md-8">
+            <div class="info-box">
+                <h4 class="mb-3">
+                    <i class="bi bi-file-text"></i> Descripción del Trabajo
+                </h4>
+                {% if oferta.descripcion %}
+                    <p class="text-muted">{{ oferta.descripcion|linebreaks }}</p>
+                {% else %}
+                    <p class="text-muted">Sin descripción adicional.</p>
+                {% endif %}
+                
+                <hr>
+                
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <small class="text-muted">Fecha de publicación</small>
+                        <div class="fw-bold">
+                            <i class="bi bi-calendar"></i> 
+                            {{ oferta.fecha_creacion|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted">Última actualización</small>
+                        <div class="fw-bold">
+                            <i class="bi bi-clock"></i> 
+                            {{ oferta.fecha_actualizacion|timesince }} atrás
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Propuestas (si es el creador) -->
+            {% if es_creador and propuestas %}
+                <div class="info-box mt-4">
+                    <h4 class="mb-3">
+                        <i class="bi bi-inbox-fill"></i> 
+                        Propuestas Recibidas ({{ propuestas.count }})
+                    </h4>
+                    
+                    {% for propuesta in propuestas %}
+                        <div class="propuesta-card position-relative {% if forloop.first %}mejor-oferta{% endif %}">
+                            {% if propuesta.version > 1 %}
+                                <span class="version-badge">
+                                    <i class="bi bi-arrow-repeat"></i> v{{ propuesta.version }}
+                                </span>
+                            {% endif %}
+                            
+                            {% if forloop.first %}
+                                <div class="badge bg-success mb-2">
+                                    <i class="bi bi-trophy-fill"></i> Mejor Oferta
+                                </div>
+                            {% endif %}
+                            
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-person-circle fs-3 text-primary"></i>
+                                        <div>
+                                            <div class="fw-bold">{{ propuesta.profesional.get_full_name|default:propuesta.profesional.username }}</div>
+                                            <small class="text-muted">
+                                                ⭐ {{ propuesta.profesional.profile.puntuacion|floatformat:1 }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <small class="text-muted d-block">Monto</small>
+                                    <div class="fs-4 fw-bold text-primary">
+                                        ${{ propuesta.monto|floatformat:0 }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <small class="text-muted d-block">Entrega</small>
+                                    <div class="fs-5 fw-bold">
+                                        {{ propuesta.dias_entrega }} días
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <button class="btn btn-sm btn-gradient">
+                                        <i class="bi bi-check-circle"></i> Aceptar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {% if propuesta.comentario %}
+                                <div class="mt-3 p-2 bg-light rounded">
+                                    <small class="text-muted">
+                                        <i class="bi bi-chat-left-text"></i> {{ propuesta.comentario }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                            
+                            <small class="text-muted d-block mt-2">
+                                <i class="bi bi-clock"></i> 
+                                Actualizada {{ propuesta.fecha_actualizacion|timesince }} atrás
+                            </small>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Mi Propuesta -->
+            {% if mi_propuesta %}
+                <div class="info-box mb-3">
+                    <h5 class="mb-3">
+                        <i class="bi bi-check-circle-fill text-success"></i> Tu Propuesta
+                    </h5>
+                    
+                    {% if mi_propuesta.version > 1 %}
+                        <div class="alert alert-warning py-2 mb-3">
+                            <small>
+                                <i class="bi bi-arrow-repeat"></i> 
+                                Versión {{ mi_propuesta.version }} (Contraoferta)
+                            </small>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Monto propuesto</small>
+                        <div class="fs-3 fw-bold text-success">
+                            ${{ mi_propuesta.monto|floatformat:0 }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Días de entrega</small>
+                        <div class="fs-5 fw-bold">
+                            {{ mi_propuesta.dias_entrega }} días
+                        </div>
+                    </div>
+                    
+                    {% if mi_propuesta.comentario %}
+                        <div class="mb-3">
+                            <small class="text-muted">Comentario</small>
+                            <div class="p-2 bg-light rounded">
+                                <small>{{ mi_propuesta.comentario }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i> 
+                        Última actualización: {{ mi_propuesta.fecha_actualizacion|timesince }} atrás
+                    </small>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'usuarios:crear_propuesta' oferta.id %}" class="btn btn-warning">
+                            <i class="bi bi-arrow-repeat"></i> Mejorar Propuesta
+                        </a>
+                    </div>
+                </div>
+            {% elif user.is_authenticated and user.profile.tipo_rol == 'OFICIO' %}
+                <div class="info-box mb-3">
+                    <h5 class="mb-3">
+                        <i class="bi bi-send"></i> Envía tu Propuesta
+                    </h5>
+                    <p class="text-muted">
+                        Participa en esta oferta enviando tu mejor propuesta.
+                    </p>
+                    <div class="d-grid">
+                        <a href="{% url 'usuarios:crear_propuesta' oferta.id %}" class="btn btn-gradient btn-lg">
+                            <i class="bi bi-plus-circle"></i> Crear Propuesta
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Estadísticas -->
+            <div class="info-box">
+                <h5 class="mb-3">
+                    <i class="bi bi-graph-up"></i> Estadísticas
+                </h5>
+                
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <span class="text-muted">Propuestas</span>
+                    <strong>{{ oferta.cantidad_propuestas }}</strong>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <span class="text-muted">Presupuesto</span>
+                    <strong>${{ oferta.presupuesto_ars|floatformat:0 }}</strong>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Estado</span>
+                    <span class="badge bg-success">{{ oferta.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Volver -->
+    <div class="text-center mt-4">
+        <a href="{% url 'usuarios:ofertas_lista' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a Ofertas
+        </a>
+    </div>
+</div>
+{% endblock %}

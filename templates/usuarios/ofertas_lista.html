@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% load usuarios_tags %}
+
+{% block title %}Ofertas de Trabajo - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .oferta-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .oferta-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .oferta-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+    }
+    
+    .badge-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 0.75rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .presupuesto-badge {
+        background: rgba(255,255,255,0.2);
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+    
+    .propuesta-info {
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        padding: 1rem;
+        border-radius: 0 10px 10px 0;
+        margin-top: 1rem;
+    }
+    
+    .propuesta-info.mi-propuesta {
+        background: #d4edda;
+        border-left-color: #28a745;
+    }
+    
+    .stats-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f8f9fa;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.875rem;
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-briefcase-fill text-primary"></i> Ofertas de Trabajo
+            </h1>
+            <p class="text-muted">Encuentra trabajos disponibles y envía tus propuestas</p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if user.is_authenticated and user.profile.tipo_rol == 'PERSONA' or user.profile.tipo_rol == 'CONSORCIO' %}
+                <a href="#" class="btn btn-gradient btn-lg">
+                    <i class="bi bi-plus-circle"></i> Publicar Oferta
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="stats-badge">
+                        <i class="bi bi-briefcase"></i>
+                        <strong>{{ ofertas.count }}</strong> ofertas disponibles
+                    </span>
+                    {% if user.is_authenticated and user.profile.tipo_rol == 'OFICIO' %}
+                        <span class="stats-badge">
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong>{{ mis_propuestas|length }}</strong> mis propuestas
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <select class="form-select" id="ordenamiento">
+                    <option value="recientes">Más recientes</option>
+                    <option value="presupuesto_alto">Mayor presupuesto</option>
+                    <option value="presupuesto_bajo">Menor presupuesto</option>
+                    <option value="mas_propuestas">Más propuestas</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Ofertas -->
+    {% if ofertas %}
+        <div class="row g-4">
+            {% for oferta in ofertas %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card oferta-card">
+                        <div class="oferta-header position-relative">
+                            <span class="badge bg-success badge-status">
+                                <i class="bi bi-circle-fill"></i> {{ oferta.get_status_display }}
+                            </span>
+                            <h5 class="mb-2">{{ oferta.titulo }}</h5>
+                            <p class="mb-1 small">
+                                <i class="bi bi-geo-alt-fill"></i> {{ oferta.zona }}
+                            </p>
+                            <div class="presupuesto-badge">
+                                <i class="bi bi-cash"></i> 
+                                <strong>${{ oferta.presupuesto_ars|floatformat:0 }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            {% if oferta.descripcion %}
+                                <p class="text-muted small mb-3">
+                                    {{ oferta.descripcion|truncatewords:20 }}
+                                </p>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> 
+                                    {{ oferta.fecha_creacion|timesince }} atrás
+                                </small>
+                                <span class="badge bg-info">
+                                    <i class="bi bi-people"></i> {{ oferta.num_propuestas }} propuestas
+                                </span>
+                            </div>
+                            
+                            {% if oferta.monto_minimo %}
+                                <div class="alert alert-info py-2 mb-3">
+                                    <small>
+                                        <i class="bi bi-trophy"></i> 
+                                        Mejor oferta: <strong>${{ oferta.monto_minimo|floatformat:0 }}</strong>
+                                    </small>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Información de propuesta del usuario -->
+                            {% if oferta.id in mis_propuestas %}
+                                <div class="propuesta-info mi-propuesta">
+                                    <small class="fw-bold text-success">
+                                        <i class="bi bi-check-circle-fill"></i> Tu propuesta
+                                    </small>
+                                    <div class="mt-1">
+                                        <small>
+                                            Monto: <strong>${{ mis_propuestas|get_item:oferta.id|attr:"monto"|floatformat:0 }}</strong> | 
+                                            {{ mis_propuestas|get_item:oferta.id|attr:"dias_entrega" }} días
+                                        </small>
+                                        <br>
+                                        <small class="text-muted">
+                                            Versión {{ mis_propuestas|get_item:oferta.id|attr:"version" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{% url 'usuarios:oferta_detalle' oferta.id %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Ver Detalles
+                                </a>
+                                
+                                {% if user.is_authenticated and user.profile.tipo_rol == 'OFICIO' %}
+                                    {% if oferta.id in mis_propuestas %}
+                                        <a href="{% url 'usuarios:crear_propuesta' oferta.id %}" class="btn btn-warning">
+                                            <i class="bi bi-arrow-repeat"></i> Mejorar Oferta
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'usuarios:crear_propuesta' oferta.id %}" class="btn btn-gradient">
+                                            <i class="bi bi-send"></i> Enviar Propuesta
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+            <h3 class="mt-3 text-muted">No hay ofertas disponibles</h3>
+            <p class="text-muted">Vuelve más tarde para ver nuevas oportunidades</p>
+        </div>
+    {% endif %}
+</div>
+
+{% load usuarios_tags %}
+<script>
+// Agregar funcionalidad de ordenamiento si es necesario
+</script>
+{% endblock %}

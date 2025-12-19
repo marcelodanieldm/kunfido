@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import UserProfile
+from .models import UserProfile, JobOffer, Proposal
 
 
 class UserProfileInline(admin.StackedInline):
@@ -137,6 +137,82 @@ class KunfidoAdminSite(admin.AdminSite):
         return super().index(request, extra_context=extra_context)
 
 
+@admin.register(JobOffer)
+class JobOfferAdmin(admin.ModelAdmin):
+    """
+    Admin para el modelo JobOffer.
+    """
+    list_display = ('titulo', 'creador', 'zona', 'presupuesto_ars', 'status', 'cantidad_propuestas', 'fecha_creacion')
+    list_filter = ('status', 'fecha_creacion', 'zona')
+    search_fields = ('titulo', 'descripcion', 'zona', 'creador__username', 'creador__email')
+    readonly_fields = ('cantidad_propuestas', 'fecha_creacion', 'fecha_actualizacion')
+    
+    fieldsets = (
+        ('Información Básica', {
+            'fields': ('creador', 'titulo', 'descripcion')
+        }),
+        ('Detalles del Trabajo', {
+            'fields': ('zona', 'presupuesto_ars', 'status')
+        }),
+        ('Estadísticas', {
+            'fields': ('cantidad_propuestas',),
+            'classes': ('collapse',)
+        }),
+        ('Fechas', {
+            'fields': ('fecha_creacion', 'fecha_actualizacion'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def cantidad_propuestas(self, obj):
+        """Muestra la cantidad de propuestas recibidas."""
+        return obj.cantidad_propuestas
+    cantidad_propuestas.short_description = 'Propuestas'
+
+
+class ProposalInline(admin.TabularInline):
+    """
+    Inline para mostrar propuestas dentro del admin de JobOffer.
+    """
+    model = Proposal
+    extra = 0
+    readonly_fields = ('version', 'fecha_creacion', 'fecha_actualizacion')
+    fields = ('profesional', 'monto', 'dias_entrega', 'version', 'fecha_actualizacion')
+
+
+@admin.register(Proposal)
+class ProposalAdmin(admin.ModelAdmin):
+    """
+    Admin para el modelo Proposal.
+    """
+    list_display = ('get_oferta_titulo', 'profesional', 'monto', 'dias_entrega', 'version', 'fecha_actualizacion')
+    list_filter = ('fecha_creacion', 'version')
+    search_fields = ('oferta__titulo', 'profesional__username', 'profesional__email', 'comentario')
+    readonly_fields = ('version', 'fecha_creacion', 'fecha_actualizacion')
+    
+    fieldsets = (
+        ('Oferta', {
+            'fields': ('oferta',)
+        }),
+        ('Profesional', {
+            'fields': ('profesional',)
+        }),
+        ('Propuesta', {
+            'fields': ('monto', 'dias_entrega', 'comentario')
+        }),
+        ('Metadata', {
+            'fields': ('version', 'fecha_creacion', 'fecha_actualizacion'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_oferta_titulo(self, obj):
+        """Obtiene el título de la oferta."""
+        return obj.oferta.titulo
+    get_oferta_titulo.short_description = 'Oferta'
+    get_oferta_titulo.admin_order_field = 'oferta__titulo'
+
+
 # Crear instancia del admin site personalizado
 admin_site = KunfidoAdminSite(name='kunfido_admin')
 
@@ -147,3 +223,5 @@ admin.site.register(User, UserAdmin)
 # Registrar modelos en el admin site personalizado
 admin_site.register(User, UserAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
+admin_site.register(JobOffer, JobOfferAdmin)
+admin_site.register(Proposal, ProposalAdmin)

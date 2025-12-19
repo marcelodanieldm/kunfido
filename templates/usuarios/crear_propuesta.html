@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}{% if es_actualizacion %}Mejorar Propuesta{% else %}Crear Propuesta{% endif %} - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .propuesta-form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .oferta-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+    }
+    
+    .input-group-lg .form-control {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .version-alert {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        border: none;
+        border-radius: 15px;
+        padding: 1.5rem;
+    }
+    
+    .comparison-box {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="propuesta-form-container">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            {% if es_actualizacion %}
+                <h1 class="display-5 fw-bold">
+                    <i class="bi bi-arrow-repeat text-warning"></i> Mejorar tu Propuesta
+                </h1>
+                <p class="text-muted">Actualiza tu oferta para mejorar tus posibilidades</p>
+            {% else %}
+                <h1 class="display-5 fw-bold">
+                    <i class="bi bi-send text-primary"></i> Crear Propuesta
+                </h1>
+                <p class="text-muted">Envía tu mejor oferta para este trabajo</p>
+            {% endif %}
+        </div>
+
+        <!-- Resumen de la Oferta -->
+        <div class="oferta-summary">
+            <h3 class="mb-3">{{ oferta.titulo }}</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-1">
+                        <i class="bi bi-geo-alt-fill"></i> <strong>Zona:</strong> {{ oferta.zona }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="bi bi-cash"></i> <strong>Presupuesto:</strong> ${{ oferta.presupuesto_ars|floatformat:0 }}
+                    </p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-1">
+                        <i class="bi bi-people"></i> <strong>{{ oferta.cantidad_propuestas }}</strong> propuestas
+                    </p>
+                    <p class="mb-0">
+                        <i class="bi bi-clock"></i> Publicado {{ oferta.fecha_creacion|timesince }} atrás
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert de Contraoferta -->
+        {% if es_actualizacion %}
+            <div class="version-alert">
+                <h5 class="mb-2">
+                    <i class="bi bi-info-circle-fill"></i> Contraoferta / Puja
+                </h5>
+                <p class="mb-3">
+                    Estás actualizando tu propuesta existente. Esto creará una nueva versión 
+                    (v{{ propuesta.version|add:1 }}) y mejorará tus oportunidades de ganar el trabajo.
+                </p>
+                
+                <!-- Comparación con propuesta anterior -->
+                <div class="comparison-box">
+                    <h6 class="mb-3">Tu propuesta actual:</h6>
+                    <div class="row">
+                        <div class="col-4">
+                            <small class="text-muted">Monto</small>
+                            <div class="fw-bold">${{ propuesta.monto|floatformat:0 }}</div>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted">Días</small>
+                            <div class="fw-bold">{{ propuesta.dias_entrega }} días</div>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted">Versión</small>
+                            <div class="fw-bold">v{{ propuesta.version }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Formulario -->
+        <div class="form-card">
+            <form method="post" id="propuestaForm">
+                {% csrf_token %}
+                
+                <!-- Monto -->
+                <div class="mb-4">
+                    <label for="monto" class="form-label fw-bold">
+                        <i class="bi bi-cash-stack"></i> Monto Propuesto (ARS)
+                    </label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-primary text-white">$</span>
+                        <input 
+                            type="number" 
+                            class="form-control" 
+                            id="monto" 
+                            name="monto" 
+                            step="0.01" 
+                            min="0"
+                            value="{{ propuesta.monto|default:'' }}"
+                            required
+                            placeholder="Ej: 15000.00"
+                        >
+                    </div>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle"></i> 
+                        Presupuesto de referencia: ${{ oferta.presupuesto_ars|floatformat:0 }}
+                    </div>
+                    <div id="montoComparison" class="mt-2"></div>
+                </div>
+
+                <!-- Días de Entrega -->
+                <div class="mb-4">
+                    <label for="dias_entrega" class="form-label fw-bold">
+                        <i class="bi bi-calendar-check"></i> Días de Entrega
+                    </label>
+                    <input 
+                        type="number" 
+                        class="form-control form-control-lg" 
+                        id="dias_entrega" 
+                        name="dias_entrega" 
+                        min="1"
+                        value="{{ propuesta.dias_entrega|default:'' }}"
+                        required
+                        placeholder="Ej: 15"
+                    >
+                    <div class="form-text">
+                        ¿Cuántos días necesitas para completar el trabajo?
+                    </div>
+                </div>
+
+                <!-- Comentario -->
+                <div class="mb-4">
+                    <label for="comentario" class="form-label fw-bold">
+                        <i class="bi bi-chat-left-text"></i> Comentario / Detalles (Opcional)
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="comentario" 
+                        name="comentario" 
+                        rows="5"
+                        placeholder="Describe tu experiencia, metodología, materiales a usar, etc."
+                    >{{ propuesta.comentario|default:'' }}</textarea>
+                    <div class="form-text">
+                        Destaca tu experiencia y por qué eres la mejor opción
+                    </div>
+                </div>
+
+                <!-- Resumen de la Propuesta -->
+                <div class="alert alert-info">
+                    <h6 class="mb-2">
+                        <i class="bi bi-clipboard-check"></i> Resumen de tu propuesta:
+                    </h6>
+                    <div id="resumenPropuesta">
+                        <p class="mb-1">
+                            Completarás el trabajo en <strong id="resumenDias">-</strong> días 
+                            por un monto de <strong id="resumenMonto">$0</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{% url 'usuarios:oferta_detalle' oferta.id %}" class="btn btn-outline-secondary btn-lg w-100">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-gradient btn-lg w-100">
+                            {% if es_actualizacion %}
+                                <i class="bi bi-arrow-repeat"></i> Actualizar Propuesta
+                            {% else %}
+                                <i class="bi bi-send-fill"></i> Enviar Propuesta
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tips -->
+        <div class="mt-4 p-4 bg-light rounded">
+            <h6 class="mb-3">
+                <i class="bi bi-lightbulb-fill text-warning"></i> Consejos para una buena propuesta:
+            </h6>
+            <ul class="mb-0">
+                <li>Sé competitivo con tu precio pero no te subvalores</li>
+                <li>Ofrece plazos de entrega realistas</li>
+                <li>Destaca tu experiencia relevante en el comentario</li>
+                <li>Puedes actualizar tu propuesta si recibes feedback</li>
+                <li>Las contraofertas muestran tu interés en el proyecto</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Actualizar resumen en tiempo real
+    const montoInput = document.getElementById('monto');
+    const diasInput = document.getElementById('dias_entrega');
+    const presupuestoReferencia = {{ oferta.presupuesto_ars }};
+    
+    function actualizarResumen() {
+        const monto = parseFloat(montoInput.value) || 0;
+        const dias = parseInt(diasInput.value) || 0;
+        
+        document.getElementById('resumenMonto').textContent = '$' + monto.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        document.getElementById('resumenDias').textContent = dias;
+        
+        // Comparación con presupuesto
+        const montoComparison = document.getElementById('montoComparison');
+        if (monto > 0) {
+            const diferencia = ((monto - presupuestoReferencia) / presupuestoReferencia * 100).toFixed(1);
+            let mensaje = '';
+            let clase = '';
+            
+            if (monto < presupuestoReferencia) {
+                mensaje = `<i class="bi bi-arrow-down text-success"></i> ${Math.abs(diferencia)}% por debajo del presupuesto`;
+                clase = 'alert-success';
+            } else if (monto > presupuestoReferencia) {
+                mensaje = `<i class="bi bi-arrow-up text-warning"></i> ${diferencia}% por encima del presupuesto`;
+                clase = 'alert-warning';
+            } else {
+                mensaje = `<i class="bi bi-check-circle text-info"></i> Igual al presupuesto`;
+                clase = 'alert-info';
+            }
+            
+            montoComparison.innerHTML = `<div class="alert ${clase} py-2 mb-0"><small>${mensaje}</small></div>`;
+        } else {
+            montoComparison.innerHTML = '';
+        }
+    }
+    
+    montoInput.addEventListener('input', actualizarResumen);
+    diasInput.addEventListener('input', actualizarResumen);
+    
+    // Actualizar al cargar la página
+    actualizarResumen();
+</script>
+{% endblock %}
