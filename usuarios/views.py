@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.db.models import Count, Min, Avg
+from django.db.models import Count, Min, Avg, Sum, Q
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from decimal import Decimal
@@ -11,6 +11,9 @@ from .models import (
     UserProfile, JobOffer, Proposal, DelayJustification,
     Wallet, Transaction, WorkEvent
 )
+from django.contrib.auth.models import User
+import csv
+from datetime import timedelta
 
 
 def home(request):
@@ -854,3 +857,178 @@ def cargar_fondos(request):
         messages.error(request, f'Error al cargar fondos: {str(e)}')
     
     return redirect('usuarios:wallet_detalle')
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def admin_custom_dashboard(request):
+    """
+    Dashboard administrativo personalizado con KPIs del sistema.
+    Solo accesible para superusuarios.
+    """
+    # KPI 1: Volumen Total Transaccionado (GMV)
+    gmv_data = Transaction.objects.filter(
+        status='COMPLETED'
+    ).aggregate(
+        total=Sum('monto_usdc')
+    )
+    gmv = gmv_data['total'] or Decimal('0.00')
+    
+    # KPI 2: Comisión Acumulada
+    comision_data = Transaction.objects.filter(
+        tipo_transaccion='FEE',
+        status='COMPLETED'
+    ).aggregate(
+        total=Sum('monto_usdc')
+    )
+    comision_acumulada = comision_data['total'] or Decimal('0.00')
+    
+    # KPI 3: Tasa de Atrasos Promedio
+    # Obtener trabajos finalizados con fecha límite y fecha de finalización
+    trabajos_finalizados = JobOffer.objects.filter(
+        status__in=['FINALIZADA', 'EN_PROGRESO']
+    ).exclude(
+        fecha_limite__isnull=True
+    )
+    
+    total_trabajos = trabajos_finalizados.count()
+    trabajos_atrasados = 0
+    dias_atraso_total = 0
+    
+    for trabajo in trabajos_finalizados:
+        # Buscar evento de trabajo completado
+        evento_completado = WorkEvent.objects.filter(
+            oferta=trabajo,
+            tipo_evento='TRABAJO_COMPLETADO'
+        ).first()
+        
+        if evento_completado:
+            fecha_completado = evento_completado.fecha_evento
+            if fecha_completado > trabajo.fecha_limite:
+                trabajos_atrasados += 1
+                dias_atraso = (fecha_completado - trabajo.fecha_limite).days
+                dias_atraso_total += dias_atraso
+    
+    tasa_atrasos = (trabajos_atrasados / total_trabajos * 100) if total_trabajos > 0 else 0
+    promedio_dias_atraso = (dias_atraso_total / trabajos_atrasados) if trabajos_atrasados > 0 else 0
+    
+    # KPI 4: Usuarios Activos (últimos 30 días)
+    fecha_limite_actividad = timezone.now() - timedelta(days=30)
+    usuarios_activos = User.objects.filter(
+        Q(ofertas_creadas__fecha_creacion__gte=fecha_limite_actividad) |
+        Q(propuestas__fecha_creacion__gte=fecha_limite_actividad) |
+        Q(transacciones_enviadas__fecha_creacion__gte=fecha_limite_actividad) |
+        Q(transacciones_recibidas__fecha_creacion__gte=fecha_limite_actividad)
+    ).distinct().count()
+    
+    # Estadísticas adicionales
+    total_usuarios = User.objects.count()
+    total_trabajos = JobOffer.objects.count()
+    trabajos_completados = JobOffer.objects.filter(status='FINALIZADA').count()
+    total_transacciones = Transaction.objects.filter(status='COMPLETED').count()
+    
+    context = {
+        'gmv': gmv,
+        'comision_acumulada': comision_acumulada,
+        'tasa_atrasos': round(tasa_atrasos, 2),
+        'promedio_dias_atraso': round(promedio_dias_atraso, 1),
+        'usuarios_activos': usuarios_activos,
+        'total_usuarios': total_usuarios,
+        'total_trabajos': total_trabajos,
+        'trabajos_completados': trabajos_completados,
+        'total_transacciones': total_transacciones,
+    }
+    
+    return render(request, 'admin/custom_dashboard.html', context)
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def exportar_trabajos_csv(request):
+    """
+    Exporta un CSV con todos los trabajos terminados y sus montos.
+    Solo accesible para superusuarios.
+    """
+    # Crear la respuesta HTTP con el tipo de contenido CSV
+    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    response['Content-Disposition'] = 'attachment; filename="trabajos_terminados.csv"'
+    
+    # Agregar BOM para compatibilidad con Excel
+    response.write('\ufeff')
+    
+    # Crear el writer CSV
+    writer = csv.writer(response)
+    
+    # Escribir encabezados
+    writer.writerow([
+        'ID Trabajo',
+        'Título',
+        'Cliente',
+        'Email Cliente',
+        'Profesional Asignado',
+        'Email Profesional',
+        'Monto Total (USDC)',
+        'Fecha Creación',
+        'Fecha Límite',
+        'Fecha Finalización',
+        'Estado',
+        'Comisión Kunfido (USDC)',
+        'Pago a Profesional (USDC)',
+    ])
+    
+    # Obtener trabajos finalizados
+    trabajos = JobOffer.objects.filter(
+        status='FINALIZADA'
+    ).select_related(
+        'creador',
+        'profesional_asignado'
+    ).order_by('-fecha_creacion')
+    
+    # Escribir datos
+    for trabajo in trabajos:
+        # Buscar transacciones relacionadas
+        trans_escrow = Transaction.objects.filter(
+            oferta_relacionada=trabajo,
+            tipo_transaccion='ESCROW',
+            status='COMPLETED'
+        ).first()
+        
+        trans_pago = Transaction.objects.filter(
+            oferta_relacionada=trabajo,
+            tipo_transaccion='PAYMENT',
+            status='COMPLETED'
+        ).first()
+        
+        trans_fee = Transaction.objects.filter(
+            oferta_relacionada=trabajo,
+            tipo_transaccion='FEE',
+            status='COMPLETED'
+        ).first()
+        
+        # Buscar fecha de finalización
+        evento_completado = WorkEvent.objects.filter(
+            oferta=trabajo,
+            tipo_evento='TRABAJO_COMPLETADO'
+        ).first()
+        
+        fecha_finalizacion = evento_completado.fecha_evento if evento_completado else trabajo.fecha_actualizacion
+        
+        monto_total = trans_escrow.monto_usdc if trans_escrow else Decimal('0.00')
+        comision = trans_fee.monto_usdc if trans_fee else Decimal('0.00')
+        pago_profesional = trans_pago.monto_usdc if trans_pago else Decimal('0.00')
+        
+        writer.writerow([
+            trabajo.id,
+            trabajo.titulo,
+            trabajo.creador.get_full_name() or trabajo.creador.username,
+            trabajo.creador.email,
+            trabajo.profesional_asignado.get_full_name() if trabajo.profesional_asignado else 'N/A',
+            trabajo.profesional_asignado.email if trabajo.profesional_asignado else 'N/A',
+            str(monto_total),
+            trabajo.fecha_creacion.strftime('%Y-%m-%d %H:%M'),
+            trabajo.fecha_limite.strftime('%Y-%m-%d') if trabajo.fecha_limite else 'N/A',
+            fecha_finalizacion.strftime('%Y-%m-%d %H:%M'),
+            trabajo.get_status_display(),
+            str(comision),
+            str(pago_profesional),
+        ])
+    
+    return response

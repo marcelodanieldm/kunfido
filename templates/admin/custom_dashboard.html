@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Administrativo - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --admin-primary: #2c3e50;
+        --admin-secondary: #34495e;
+        --admin-accent: #3498db;
+        --admin-success: #27ae60;
+        --admin-warning: #f39c12;
+        --admin-danger: #e74c3c;
+        --admin-light: #ecf0f1;
+    }
+
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .admin-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .admin-header {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .admin-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--admin-primary);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .admin-header .badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        background: var(--admin-accent);
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border-left: 5px solid var(--admin-accent);
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+    }
+
+    .kpi-card.success {
+        border-left-color: var(--admin-success);
+    }
+
+    .kpi-card.warning {
+        border-left-color: var(--admin-warning);
+    }
+
+    .kpi-card.danger {
+        border-left-color: var(--admin-danger);
+    }
+
+    .kpi-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .kpi-card .kpi-icon {
+        background: linear-gradient(135deg, var(--admin-accent), #5dade2);
+        color: white;
+    }
+
+    .kpi-card.success .kpi-icon {
+        background: linear-gradient(135deg, var(--admin-success), #58d68d);
+    }
+
+    .kpi-card.warning .kpi-icon {
+        background: linear-gradient(135deg, var(--admin-warning), #f8c471);
+    }
+
+    .kpi-card.danger .kpi-icon {
+        background: linear-gradient(135deg, var(--admin-danger), #ec7063);
+    }
+
+    .kpi-label {
+        font-size: 0.875rem;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--admin-primary);
+        margin-bottom: 0.5rem;
+        line-height: 1;
+    }
+
+    .kpi-subtitle {
+        font-size: 0.875rem;
+        color: #95a5a6;
+    }
+
+    .stats-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .stats-section h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stat-item {
+        padding: 1.5rem;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .stat-item:hover {
+        border-color: var(--admin-accent);
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    }
+
+    .stat-item-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-item-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+    }
+
+    .actions-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .actions-section h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--admin-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .btn-export {
+        background: linear-gradient(135deg, var(--admin-success), #58d68d);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+        color: white;
+    }
+
+    .btn-export i {
+        font-size: 1.25rem;
+    }
+
+    .alert-info {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border: 2px solid #2196f3;
+        border-radius: 15px;
+        padding: 1.5rem;
+        color: #0d47a1;
+        margin-bottom: 2rem;
+    }
+
+    .alert-info i {
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+
+    @media (max-width: 768px) {
+        .admin-container {
+            padding: 1rem;
+        }
+
+        .admin-header h1 {
+            font-size: 1.75rem;
+        }
+
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <!-- Header -->
+    <div class="admin-header">
+        <h1>
+            <i class="bi bi-speedometer2"></i>
+            Dashboard Administrativo
+            <span class="badge">SUPERUSER</span>
+        </h1>
+        <p class="text-muted mb-0 mt-2">
+            <i class="bi bi-calendar-event"></i>
+            Panel de control y métricas del sistema
+        </p>
+    </div>
+
+    <!-- Alerta informativa -->
+    <div class="alert-info">
+        <i class="bi bi-info-circle-fill"></i>
+        <strong>Acceso exclusivo:</strong> Este dashboard es visible únicamente para administradores del sistema.
+    </div>
+
+    <!-- KPIs Principales -->
+    <div class="kpi-grid">
+        <!-- KPI 1: GMV -->
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="kpi-label">Volumen Total Transaccionado</div>
+            <div class="kpi-value">{{ gmv|floatformat:2 }}</div>
+            <div class="kpi-subtitle">USDC (GMV)</div>
+        </div>
+
+        <!-- KPI 2: Comisión Acumulada -->
+        <div class="kpi-card success">
+            <div class="kpi-icon">
+                <i class="bi bi-piggy-bank"></i>
+            </div>
+            <div class="kpi-label">Comisión Acumulada</div>
+            <div class="kpi-value">{{ comision_acumulada|floatformat:2 }}</div>
+            <div class="kpi-subtitle">USDC ganados</div>
+        </div>
+
+        <!-- KPI 3: Tasa de Atrasos -->
+        <div class="kpi-card {% if tasa_atrasos > 20 %}danger{% elif tasa_atrasos > 10 %}warning{% else %}success{% endif %}">
+            <div class="kpi-icon">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="kpi-label">Tasa de Atrasos</div>
+            <div class="kpi-value">{{ tasa_atrasos }}%</div>
+            <div class="kpi-subtitle">Promedio: {{ promedio_dias_atraso }} días</div>
+        </div>
+
+        <!-- KPI 4: Usuarios Activos -->
+        <div class="kpi-card warning">
+            <div class="kpi-icon">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="kpi-label">Usuarios Activos</div>
+            <div class="kpi-value">{{ usuarios_activos }}</div>
+            <div class="kpi-subtitle">Últimos 30 días</div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Adicionales -->
+    <div class="stats-section">
+        <h2>
+            <i class="bi bi-graph-up"></i>
+            Estadísticas Generales
+        </h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-item-label">
+                    <i class="bi bi-person-check"></i> Total Usuarios
+                </div>
+                <div class="stat-item-value">{{ total_usuarios }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-item-label">
+                    <i class="bi bi-briefcase"></i> Total Trabajos
+                </div>
+                <div class="stat-item-value">{{ total_trabajos }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-item-label">
+                    <i class="bi bi-check-circle"></i> Trabajos Completados
+                </div>
+                <div class="stat-item-value">{{ trabajos_completados }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-item-label">
+                    <i class="bi bi-arrow-left-right"></i> Transacciones
+                </div>
+                <div class="stat-item-value">{{ total_transacciones }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="actions-section">
+        <h2>
+            <i class="bi bi-download"></i>
+            Exportar Datos
+        </h2>
+        <p class="text-muted mb-3">
+            Descarga un archivo CSV con el listado completo de todos los trabajos terminados, incluyendo montos, comisiones y datos de los usuarios.
+        </p>
+        <a href="{% url 'usuarios:exportar_trabajos_csv' %}" class="btn-export">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            Descargar Trabajos Terminados (CSV)
+        </a>
+    </div>
+</div>
+{% endblock %}

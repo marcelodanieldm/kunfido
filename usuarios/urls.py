@@ -34,4 +34,8 @@ urlpatterns = [
     # Billetera
     path('wallet/', views.wallet_detalle, name='wallet_detalle'),
     path('wallet/cargar-fondos/', views.cargar_fondos, name='cargar_fondos'),
+    
+    # Admin Dashboard
+    path('admin-dashboard/', views.admin_custom_dashboard, name='admin_custom_dashboard'),
+    path('admin-dashboard/exportar-trabajos/', views.exportar_trabajos_csv, name='exportar_trabajos_csv'),
 ]
