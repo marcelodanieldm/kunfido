@@ -930,5 +930,141 @@
         </div>
     {% endif %}
 
+    <!-- Sección de Wallet y Transacciones (para todos los usuarios) -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card metric-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card-body text-center">
+                    <h5 class="mb-3">
+                        <i class="bi bi-wallet2"></i> Mi Billetera
+                    </h5>
+                    <div style="font-size: 3rem; font-weight: 700; margin: 1.5rem 0;">
+                        {{ wallet.balance_usdc|floatformat:2 }}
+                    </div>
+                    <div style="opacity: 0.9; font-size: 1.1rem;">
+                        USDC_MOCK
+                    </div>
+                    <hr style="border-color: rgba(255,255,255,0.3); margin: 1.5rem 0;">
+                    <div class="text-start" style="font-size: 0.875rem; opacity: 0.9;">
+                        <div class="mb-2">
+                            <i class="bi bi-clock-history"></i> 
+                            Actualizado: {{ wallet.fecha_actualizacion|date:"d/m/Y H:i" }}
+                        </div>
+                        <div>
+                            <i class="bi bi-shield-check"></i> 
+                            Cuenta {{ wallet.get_tipo_cuenta_display }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history"></i> Transacciones Recientes
+                    </h5>
+                    <small class="text-muted">Últimos 10 movimientos</small>
+                </div>
+                <div class="card-body" style="max-height: 450px; overflow-y: auto;">
+                    {% if transacciones %}
+                        {% for trans in transacciones %}
+                            <div class="transaction-item" style="padding: 1rem; border-bottom: 1px solid #f0f0f0; transition: background 0.2s;">
+                                <div class="row align-items-center">
+                                    <div class="col-md-7">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <!-- Icono según tipo de transacción -->
+                                            <div style="width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+                                                {% if trans.tipo_transaccion == 'ESCROW_DEPOSIT' %}
+                                                    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+                                                {% elif trans.tipo_transaccion == 'RELEASE_PAYMENT' %}
+                                                    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+                                                {% elif trans.tipo_transaccion == 'REFUND' %}
+                                                    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+                                                {% elif trans.tipo_transaccion == 'FEE' %}
+                                                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+                                                {% else %}
+                                                    background: #e9ecef;
+                                                {% endif %}">
+                                                {% if trans.tipo_transaccion == 'ESCROW_DEPOSIT' %}
+                                                    <i class="bi bi-lock-fill"></i>
+                                                {% elif trans.tipo_transaccion == 'RELEASE_PAYMENT' %}
+                                                    <i class="bi bi-unlock-fill"></i>
+                                                {% elif trans.tipo_transaccion == 'REFUND' %}
+                                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                                {% elif trans.tipo_transaccion == 'FEE' %}
+                                                    <i class="bi bi-percent"></i>
+                                                {% else %}
+                                                    <i class="bi bi-arrow-left-right"></i>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold mb-1">
+                                                    {{ trans.get_tipo_transaccion_display }}
+                                                </div>
+                                                <small class="text-muted d-block mb-1">
+                                                    {{ trans.descripcion|truncatewords:10 }}
+                                                </small>
+                                                {% if trans.oferta_relacionada %}
+                                                    <small class="text-primary">
+                                                        <i class="bi bi-briefcase"></i> 
+                                                        {{ trans.oferta_relacionada.titulo|truncatewords:4 }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3 text-center">
+                                        <div class="fw-bold" style="font-size: 1.25rem;
+                                            {% if trans.from_wallet == wallet %}
+                                                color: #dc3545;
+                                            {% else %}
+                                                color: #28a745;
+                                            {% endif %}">
+                                            {% if trans.from_wallet == wallet %}
+                                                - {{ trans.monto_usdc }}
+                                            {% else %}
+                                                + {{ trans.monto_usdc }}
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">USDC</small>
+                                    </div>
+                                    
+                                    <div class="col-md-2 text-end">
+                                        <span class="badge 
+                                            {% if trans.status == 'COMPLETED' %}
+                                                bg-success
+                                            {% elif trans.status == 'PENDING' %}
+                                                bg-warning
+                                            {% elif trans.status == 'FAILED' %}
+                                                bg-danger
+                                            {% else %}
+                                                bg-secondary
+                                            {% endif %}" style="font-size: 0.75rem;">
+                                            {{ trans.get_status_display }}
+                                        </span>
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                {{ trans.fecha_creacion|date:"d/m H:i" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                            <p class="text-muted mt-3">No tienes transacciones aún</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

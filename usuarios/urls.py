@@ -25,4 +25,13 @@ urlpatterns = [
     path('ofertas/<int:oferta_id>/justificar-atraso/', views.crear_justificacion_atraso, name='crear_justificacion_atraso'),
     path('justificaciones/<int:justificacion_id>/aceptar/', views.aceptar_replica_atraso, name='aceptar_replica_atraso'),
     path('justificaciones/<int:justificacion_id>/rechazar/', views.rechazar_replica_atraso, name='rechazar_replica_atraso'),
+    
+    # Aprobación de Trabajo y Pagos
+    path('ofertas/<int:oferta_id>/aprobar-trabajo/', views.aprobar_trabajo_completado, name='aprobar_trabajo_completado'),
+    path('ofertas/<int:oferta_id>/rechazar-trabajo/', views.rechazar_trabajo_completado, name='rechazar_trabajo_completado'),
+    path('ofertas/<int:oferta_id>/solicitar-reembolso/', views.solicitar_reembolso, name='solicitar_reembolso'),
+    
+    # Billetera
+    path('wallet/', views.wallet_detalle, name='wallet_detalle'),
+    path('wallet/cargar-fondos/', views.cargar_fondos, name='cargar_fondos'),
 ]

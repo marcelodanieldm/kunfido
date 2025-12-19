@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import UserProfile, JobOffer, Proposal, DelayJustification
+from .models import UserProfile, JobOffer, Proposal, DelayJustification, Wallet, Transaction, WorkEvent
 
 
 class UserProfileInline(admin.StackedInline):
@@ -258,6 +258,119 @@ class DelayJustificationAdmin(admin.ModelAdmin):
     get_oferta_titulo.admin_order_field = 'oferta__titulo'
 
 
+@admin.register(Wallet)
+class WalletAdmin(admin.ModelAdmin):
+    """
+    Admin para el modelo Wallet.
+    """
+    list_display = ('id', 'get_user_display', 'tipo_cuenta', 'balance_usdc', 'fecha_creacion', 'fecha_actualizacion')
+    list_filter = ('tipo_cuenta', 'fecha_creacion')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name')
+    readonly_fields = ('fecha_creacion', 'fecha_actualizacion')
+    ordering = ('-fecha_creacion',)
+    
+    fieldsets = (
+        ('Información del Usuario', {
+            'fields': ('user', 'tipo_cuenta')
+        }),
+        ('Saldo', {
+            'fields': ('balance_usdc',)
+        }),
+        ('Fechas', {
+            'fields': ('fecha_creacion', 'fecha_actualizacion'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_user_display(self, obj):
+        """Muestra el nombre del usuario o 'Sistema' si es cuenta ESCROW."""
+        if obj.tipo_cuenta == 'ESCROW':
+            return '🏦 Plataforma Escrow'
+        return obj.user.get_full_name() or obj.user.username
+    get_user_display.short_description = 'Usuario'
+    get_user_display.admin_order_field = 'user__username'
+
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    """
+    Admin para el modelo Transaction.
+    """
+    list_display = ('id', 'get_from_wallet_display', 'get_to_wallet_display', 'monto_usdc', 
+                    'tipo_transaccion', 'status', 'fecha_creacion')
+    list_filter = ('tipo_transaccion', 'status', 'fecha_creacion')
+    search_fields = ('from_wallet__user__username', 'to_wallet__user__username', 'descripcion')
+    readonly_fields = ('fecha_creacion',)
+    ordering = ('-fecha_creacion',)
+    
+    fieldsets = (
+        ('Información de Transacción', {
+            'fields': ('from_wallet', 'to_wallet', 'monto_usdc', 'tipo_transaccion', 'status')
+        }),
+        ('Detalles', {
+            'fields': ('descripcion', 'metadata')
+        }),
+        ('Relaciones', {
+            'fields': ('propuesta_relacionada', 'oferta_relacionada'),
+            'classes': ('collapse',)
+        }),
+        ('Fechas', {
+            'fields': ('fecha_creacion',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_from_wallet_display(self, obj):
+        """Muestra información de la wallet origen."""
+        if obj.from_wallet.tipo_cuenta == 'ESCROW':
+            return '🏦 Escrow'
+        return obj.from_wallet.user.username
+    get_from_wallet_display.short_description = 'De'
+    
+    def get_to_wallet_display(self, obj):
+        """Muestra información de la wallet destino."""
+        if obj.to_wallet.tipo_cuenta == 'ESCROW':
+            return '🏦 Escrow'
+        return obj.to_wallet.user.username
+    get_to_wallet_display.short_description = 'Para'
+
+
+@admin.register(WorkEvent)
+class WorkEventAdmin(admin.ModelAdmin):
+    """
+    Admin para el modelo WorkEvent.
+    """
+    list_display = ('id', 'get_oferta_titulo', 'tipo_evento', 'fecha_evento')
+    list_filter = ('tipo_evento', 'fecha_evento')
+    search_fields = ('oferta__titulo', 'descripcion')
+    readonly_fields = ('fecha_evento',)
+    ordering = ('-fecha_evento',)
+    
+    fieldsets = (
+        ('Información del Evento', {
+            'fields': ('oferta', 'tipo_evento', 'descripcion')
+        }),
+        ('Relaciones', {
+            'fields': ('propuesta_relacionada', 'transaccion_relacionada'),
+            'classes': ('collapse',)
+        }),
+        ('Metadata', {
+            'fields': ('metadata',),
+            'classes': ('collapse',)
+        }),
+        ('Fechas', {
+            'fields': ('fecha_evento',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_oferta_titulo(self, obj):
+        """Obtiene el título de la oferta."""
+        return obj.oferta.titulo
+    get_oferta_titulo.short_description = 'Oferta'
+    get_oferta_titulo.admin_order_field = 'oferta__titulo'
+
+
 # Crear instancia del admin site personalizado
 admin_site = KunfidoAdminSite(name='kunfido_admin')
 
@@ -271,3 +384,6 @@ admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(JobOffer, JobOfferAdmin)
 admin_site.register(Proposal, ProposalAdmin)
 admin_site.register(DelayJustification, DelayJustificationAdmin)
+admin_site.register(Wallet, WalletAdmin)
+admin_site.register(Transaction, TransactionAdmin)
+admin_site.register(WorkEvent, WorkEventAdmin)

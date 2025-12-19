@@ -239,6 +239,75 @@
         </div>
     </div>
 
+    <!-- Sección de Aprobación de Trabajo (solo si está EN_PROGRESO) -->
+    {% if oferta.status == 'EN_PROGRESO' %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="mb-2">
+                            <i class="bi bi-check2-square text-primary"></i> 
+                            ¿El trabajo ha sido completado?
+                        </h4>
+                        <p class="text-muted mb-0">
+                            Una vez que recibas y verifiques el trabajo, puedes aprobar la entrega para liberar el pago al profesional.
+                        </p>
+                        <div class="mt-3">
+                            <small class="text-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Nota:</strong> Al aprobar, se liberarán los fondos del escrow al profesional (menos 10% de comisión de plataforma).
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <form method="post" action="{% url 'usuarios:aprobar_trabajo_completado' oferta.id %}" class="d-inline" 
+                              onsubmit="return confirm('¿Estás seguro de aprobar este trabajo? Esta acción liberará el pago al profesional.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success btn-lg mb-2" style="width: 200px;">
+                                <i class="bi bi-check-circle-fill"></i> Aprobar Trabajo
+                            </button>
+                        </form>
+                        
+                        <button type="button" class="btn btn-warning btn-lg mb-2" style="width: 200px;" 
+                                data-bs-toggle="modal" data-bs-target="#rechazarTrabajoModal">
+                            <i class="bi bi-x-circle"></i> Rechazar
+                        </button>
+                        
+                        <button type="button" class="btn btn-danger btn-lg" style="width: 200px;" 
+                                data-bs-toggle="modal" data-bs-target="#solicitarReembolsoModal">
+                            <i class="bi bi-arrow-counterclockwise"></i> Solicitar Reembolso
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Información de Trabajo Completado -->
+    {% if oferta.status == 'COMPLETADO' %}
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading">
+                <i class="bi bi-check-circle-fill"></i> Trabajo Completado
+            </h4>
+            <p class="mb-0">
+                Este trabajo fue completado y aprobado el {{ oferta.fecha_entrega_real|date:"d/m/Y" }}.
+                El pago fue liberado al profesional exitosamente.
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- Información de Trabajo Cancelado -->
+    {% if oferta.status == 'CANCELADO' %}
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">
+                <i class="bi bi-info-circle-fill"></i> Trabajo Cancelado
+            </h4>
+            <p class="mb-0">
+                Este trabajo fue cancelado y el reembolso fue procesado.
+            </p>
+        </div>
+    {% endif %}
+
     <!-- Tabla Comparativa de Propuestas -->
     <div class="proposals-table-card">
         <div class="table-header">
@@ -445,6 +514,80 @@
         <a href="{% url 'usuarios:job_detail_public' oferta.id %}" class="btn btn-outline-primary btn-lg">
             <i class="bi bi-eye"></i> Ver Vista Pública
         </a>
+    </div>
+</div>
+
+<!-- Modal para Rechazar Trabajo -->
+<div class="modal fade" id="rechazarTrabajoModal" tabindex="-1" aria-labelledby="rechazarTrabajoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="rechazarTrabajoModalLabel">
+                    <i class="bi bi-exclamation-triangle"></i> Rechazar Trabajo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'usuarios:rechazar_trabajo_completado' oferta.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Atención:</strong> Al rechazar el trabajo, el estado volverá a "Abierto" para revisión.
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo del rechazo:</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="4" 
+                                  placeholder="Describe por qué no cumple con tus expectativas..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-x-circle"></i> Rechazar Trabajo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Solicitar Reembolso -->
+<div class="modal fade" id="solicitarReembolsoModal" tabindex="-1" aria-labelledby="solicitarReembolsoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="solicitarReembolsoModalLabel">
+                    <i class="bi bi-arrow-counterclockwise"></i> Solicitar Reembolso
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'usuarios:solicitar_reembolso' oferta.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <strong>¡Importante!</strong> Esta acción:
+                        <ul class="mb-0 mt-2">
+                            <li>Devolverá el dinero de escrow a tu billetera</li>
+                            <li>Cancelará permanentemente el trabajo</li>
+                            <li>No se podrá revertir</li>
+                        </ul>
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo_reembolso" class="form-label">Motivo del reembolso:</label>
+                        <textarea class="form-control" id="motivo_reembolso" name="motivo" rows="4" 
+                                  placeholder="Explica la razón del reembolso..." required></textarea>
+                        <small class="text-muted">
+                            Ejemplos: profesional no entregó, trabajo no inició, acordado mutuamente, etc.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-arrow-counterclockwise"></i> Procesar Reembolso
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
