@@ -854,11 +854,100 @@
 
             <div class="border-t border-gray-700 pt-8 text-center text-gray-400 text-sm">
                 <p>&copy; 2025 Kunfido. Todos los derechos reservados. Hecho con 💚 para Argentina.</p>
+                
+                <!-- Admin Access - Discreto -->
+                <button onclick="openAdminModal()" class="mt-4 text-gray-700 hover:text-gray-500 transition-colors opacity-30 hover:opacity-100" title="Acceso Admin">
+                    <i class="fas fa-shield-alt text-xs"></i>
+                </button>
             </div>
         </div>
     </footer>
 
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 relative">
+            <!-- Close Button -->
+            <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <!-- Modal Header -->
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-alt text-white text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Acceso Admin</h2>
+                <p class="text-gray-600 text-sm">Panel de administración</p>
+            </div>
+
+            <!-- Admin Login Form -->
+            <form method="post" action="{% url 'account_login' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="/admin/">
+                
+                <!-- Email -->
+                <div>
+                    <label for="admin_login" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Admin
+                    </label>
+                    <input type="email" 
+                           name="login" 
+                           id="admin_login" 
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+                           placeholder="admin@kunfido.com">
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="admin_password" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Contraseña
+                    </label>
+                    <input type="password" 
+                           name="password" 
+                           id="admin_password" 
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+                           placeholder="••••••••">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        class="w-full bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Acceder al Panel
+                </button>
+            </form>
+
+            <!-- Warning -->
+            <div class="mt-6 text-center">
+                <p class="text-xs text-gray-500">
+                    <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                    Área restringida para administradores
+                </p>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Modal de Admin
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cerrar modal admin al hacer click fuera
+        document.getElementById('adminModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAdminModal();
+            }
+        });
+
         // Modal de Login
         function openLoginModal() {
             document.getElementById('loginModal').classList.remove('hidden');
@@ -881,6 +970,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeLoginModal();
+                closeAdminModal();
             }
         });
 
