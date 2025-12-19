@@ -1,0 +1,50 @@
+<div class="currency-display">
+    <div class="primary-balance">
+        <span class="amount">{{ balance_usdc|floatformat:2 }}</span>
+        <span class="currency">USDC</span>
+    </div>
+    <div class="secondary-balance">
+        <span class="amount-ars">≈ ${{ balance_ars|floatformat:2 }}</span>
+        <span class="currency-ars">ARS</span>
+        <span class="rate-info" title="Tasa: 1 USDC = ${{ tasa|floatformat:2 }} ARS ({{ tipo_cambio }})">
+            <i class="fas fa-info-circle"></i>
+        </span>
+    </div>
+</div>
+
+<style>
+.currency-display {
+    display: inline-block;
+}
+
+.primary-balance {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.primary-balance .currency {
+    font-size: 0.85em;
+    color: #7f8c8d;
+    margin-left: 4px;
+}
+
+.secondary-balance {
+    font-size: 0.9em;
+    color: #16a085;
+    margin-top: 2px;
+}
+
+.secondary-balance .currency-ars {
+    font-size: 0.8em;
+    color: #7f8c8d;
+    margin-left: 4px;
+}
+
+.secondary-balance .rate-info {
+    margin-left: 4px;
+    color: #95a5a6;
+    cursor: help;
+    font-size: 0.8em;
+}
+</style>

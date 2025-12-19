@@ -570,6 +570,32 @@ class Wallet(models.Model):
         self.balance_usdc += Decimal(str(monto))
         self.save()
     
+    def get_balance_ars(self, tipo_cambio="blue"):
+        """
+        Obtiene el balance convertido a ARS según la cotización actual.
+        
+        Args:
+            tipo_cambio: "blue" (default) o "oficial"
+        
+        Returns:
+            Decimal: Balance en pesos argentinos
+        """
+        from .currency_service import CurrencyService
+        return CurrencyService.convert_usdc_to_ars(self.balance_usdc, tipo_cambio)
+    
+    def get_exchange_rate(self, tipo_cambio="blue"):
+        """
+        Obtiene la tasa de cambio actual USDC/ARS.
+        
+        Args:
+            tipo_cambio: "blue" (default) o "oficial"
+        
+        Returns:
+            Decimal: Tasa de cambio
+        """
+        from .currency_service import CurrencyService
+        return CurrencyService.get_usdc_to_ars_rate(tipo_cambio)
+    
     @classmethod
     def get_escrow_account(cls):
         """Obtiene o crea la cuenta de escrow de la plataforma."""

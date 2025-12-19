@@ -11,6 +11,7 @@ from .models import (
     UserProfile, JobOffer, Proposal, DelayJustification,
     Wallet, Transaction, WorkEvent
 )
+from .currency_service import CurrencyService
 from django.contrib.auth.models import User
 import csv
 from datetime import timedelta
@@ -1110,12 +1111,17 @@ def wallet_detalle(request):
         if t.status == 'COMPLETED'
     )
     
+    # Obtener tasa de conversión en tiempo real
+    tasa_conversion = CurrencyService.get_usdc_to_ars_rate(tipo_cambio="blue")
+    balance_ars = wallet.get_balance_ars(tipo_cambio="blue")
+    
     context = {
         'wallet': wallet,
         'transacciones': todas_transacciones,
         'total_enviado': total_enviado,
         'total_recibido': total_recibido,
-        'tasa_conversion': Decimal('1250.00'),  # ARS por USDC (simulado)
+        'tasa_conversion': tasa_conversion,
+        'balance_ars': balance_ars,
     }
     
     return render(request, 'usuarios/wallet.html', context)
@@ -1126,6 +1132,7 @@ def wallet_detalle(request):
 def cargar_fondos(request):
     """
     Simula la carga de fondos convirtiendo ARS a USDC_MOCK.
+    Usa la tasa de conversión en tiempo real.
     """
     try:
         monto_ars = Decimal(request.POST.get('monto_ars', '0'))
@@ -1134,12 +1141,9 @@ def cargar_fondos(request):
             messages.error(request, 'El monto debe ser mayor a cero.')
             return redirect('usuarios:wallet_detalle')
         
-        # Tasa de conversión simulada (1 USDC = 1250 ARS)
-        tasa_conversion = Decimal('1250.00')
-        monto_usdc = (monto_ars / tasa_conversion).quantize(
-            Decimal('0.01'),
-            rounding=ROUND_HALF_UP
-        )
+        # Obtener tasa de conversión en tiempo real
+        tasa_conversion = CurrencyService.get_usdc_to_ars_rate(tipo_cambio="blue")
+        monto_usdc = CurrencyService.convert_ars_to_usdc(monto_ars, tipo_cambio="blue")
         
         # Obtener o crear wallet
         wallet, created = Wallet.objects.get_or_create(

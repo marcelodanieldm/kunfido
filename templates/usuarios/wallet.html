@@ -71,6 +71,42 @@
         font-weight: 600;
     }
 
+    .balance-ars {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid rgba(255, 255, 255, 0.1);
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #00ff88;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .balance-ars i.fa-exchange-alt {
+        font-size: 1rem;
+        opacity: 0.7;
+    }
+
+    .rate-badge {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        cursor: help;
+        margin-left: 5px;
+    }
+
+    .stat-sublabel {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 0.25rem;
+    }
+
+    .stat-sublabel i {
+        font-size: 0.7rem;
+        margin-right: 3px;
+    }
+
     /* Botón Cargar Fondos */
     .load-funds-section {
         background: var(--card-bg);
@@ -345,6 +381,13 @@
                 <div class="balance-label">Balance Disponible</div>
                 <div class="balance-amount">{{ wallet.balance_usdc|floatformat:2 }}</div>
                 <div class="balance-currency">Dólar Cripto (USDC_MOCK)</div>
+                <div class="balance-ars">
+                    <i class="fas fa-exchange-alt"></i>
+                    ≈ ${{ balance_ars|floatformat:2 }} ARS
+                    <span class="rate-badge" title="Dólar Blue Argentina">
+                        <i class="fas fa-info-circle"></i>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -360,8 +403,11 @@
             <div class="stat-value positive">+{{ total_recibido|floatformat:2 }} USDC</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Tasa de Conversión</div>
+            <div class="stat-label">Cotización Actual</div>
             <div class="stat-value">1 USDC = ${{ tasa_conversion|floatformat:2 }} ARS</div>
+            <div class="stat-sublabel">
+                <i class="fas fa-chart-line"></i> Dólar Blue
+            </div>
         </div>
     </div>
 
