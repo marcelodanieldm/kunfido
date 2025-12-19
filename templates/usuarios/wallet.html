@@ -1,51 +1,45 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Mi Billetera - Kunfido{% endblock %}
 
 {% block extra_css %}
 <style>
     :root {
-        --wallet-primary: #667eea;
-        --wallet-secondary: #764ba2;
-        --wallet-success: #10b981;
-        --wallet-danger: #ef4444;
-        --wallet-warning: #f59e0b;
+        --primary-crypto: #00d4ff;
+        --secondary-crypto: #0099ff;
+        --crypto-green: #00ff88;
+        --crypto-red: #ff4466;
+        --dark-bg: #0a0e27;
+        --card-bg: #1a1f3a;
+        --text-muted: #8b93a7;
     }
-    
+
     body {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e3e8f0 100%);
+        background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+        color: #fff;
+        min-height: 100vh;
     }
-    
-    .wallet-hero {
-        background: linear-gradient(135deg, var(--wallet-primary) 0%, var(--wallet-secondary) 100%);
-        border-radius: 30px;
-        padding: 3rem;
-        color: white;
-        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+
+    /* Saldo Principal */
+    .balance-card {
+        background: linear-gradient(135deg, var(--primary-crypto) 0%, var(--secondary-crypto) 100%);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
+        margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
-        margin-bottom: 2rem;
     }
-    
-    .wallet-hero::before {
+
+    .balance-card::before {
         content: '';
         position: absolute;
         top: -50%;
         right: -20%;
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        border-radius: 50%;
-    }
-    
-    .wallet-hero::after {
-        content: '';
-        position: absolute;
-        bottom: -30%;
-        left: -10%;
         width: 400px;
         height: 400px;
-        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
         border-radius: 50%;
     }
     
@@ -53,106 +47,521 @@
         position: relative;
         z-index: 1;
     }
-    
+
     .balance-label {
-        font-size: 1rem;
-        opacity: 0.9;
-        font-weight: 500;
-        letter-spacing: 1px;
+        font-size: 0.9rem;
+        font-weight: 600;
         text-transform: uppercase;
-        margin-bottom: 1rem;
+        letter-spacing: 2px;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
     }
-    
+
     .balance-amount {
-        font-size: 4.5rem;
-        font-weight: 800;
+        font-size: 4rem;
+        font-weight: 700;
         line-height: 1;
         margin-bottom: 0.5rem;
-        text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-    
+
     .balance-currency {
-        font-size: 1.75rem;
-        opacity: 0.95;
+        font-size: 1.2rem;
+        opacity: 0.9;
         font-weight: 600;
+    }
+
+    /* Botón Cargar Fondos */
+    .load-funds-section {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
         margin-bottom: 2rem;
+        border: 2px solid rgba(0, 212, 255, 0.2);
     }
-    
-    .wallet-stats {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2rem;
-        margin-top: 2rem;
+
+    .load-funds-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--primary-crypto);
     }
-    
-    .stat-item {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border-radius: 15px;
+
+    .conversion-display {
+        background: rgba(0, 212, 255, 0.1);
+        border-radius: 12px;
         padding: 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-top: 1rem;
+        border: 1px solid rgba(0, 212, 255, 0.3);
     }
-    
-    .stat-label {
-        font-size: 0.875rem;
-        opacity: 0.85;
+
+    .conversion-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 0.5rem;
     }
-    
-    .stat-value {
-        font-size: 1.75rem;
+
+    .conversion-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .conversion-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--crypto-green);
+    }
+
+    .btn-load-funds {
+        background: linear-gradient(135deg, var(--crypto-green) 0%, #00cc77 100%);
+        color: #000;
+        font-weight: 700;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        border: none;
+        font-size: 1.1rem;
+        box-shadow: 0 8px 20px rgba(0, 255, 136, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-load-funds:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0, 255, 136, 0.5);
+        background: linear-gradient(135deg, #00ff88 0%, #00ee77 100%);
+    }
+
+    .btn-load-funds:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Historial de Transacciones */
+    .transactions-section {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+    }
+
+    .transactions-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: #fff;
+    }
+
+    .transaction-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--primary-crypto);
+        transition: all 0.3s ease;
+    }
+
+    .transaction-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateX(4px);
+    }
+
+    .transaction-item.outgoing {
+        border-left-color: var(--crypto-red);
+    }
+
+    .transaction-item.incoming {
+        border-left-color: var(--crypto-green);
+    }
+
+    .transaction-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .transaction-type {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .transaction-amount {
+        font-size: 1.3rem;
         font-weight: 700;
     }
-    
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        margin-top: 2rem;
+
+    .transaction-amount.positive {
+        color: var(--crypto-green);
     }
-    
-    .btn-wallet-action {
-        flex: 1;
-        padding: 1rem 2rem;
-        border-radius: 15px;
-        font-weight: 600;
-        font-size: 1.1rem;
-        border: 2px solid white;
-        background: white;
-        color: var(--wallet-primary);
-        transition: all 0.3s ease;
+
+    .transaction-amount.negative {
+        color: var(--crypto-red);
+    }
+
+    .transaction-description {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .transaction-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .transaction-date {
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
+        gap: 0.3rem;
     }
-    
-    .btn-wallet-action:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(255,255,255,0.3);
-        background: rgba(255,255,255,0.95);
-        color: var(--wallet-primary);
+
+    .transaction-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
     }
-    
-    .btn-wallet-action i {
-        font-size: 1.5rem;
+
+    .status-completed {
+        background: rgba(0, 255, 136, 0.2);
+        color: var(--crypto-green);
     }
-    
-    .conversion-card {
-        background: white;
-        border-radius: 25px;
-        padding: 2rem;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+
+    .status-failed {
+        background: rgba(255, 68, 102, 0.2);
+        color: var(--crypto-red);
+    }
+
+    /* Stats Cards */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
         margin-bottom: 2rem;
     }
-    
-    .conversion-header {
-        display: flex;
-        justify-content: between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #f0f0f0;
+
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 1.5rem;
+        border: 1px solid rgba(0, 212, 255, 0.2);
     }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .stat-value.positive {
+        color: var(--crypto-green);
+    }
+
+    .stat-value.negative {
+        color: var(--crypto-red);
+    }
+
+    /* Input Styles */
+    .form-control-crypto {
+        background: rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(0, 212, 255, 0.3);
+        color: #fff;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .form-control-crypto:focus {
+        background: rgba(0, 0, 0, 0.5);
+        border-color: var(--primary-crypto);
+        box-shadow: 0 0 0 0.2rem rgba(0, 212, 255, 0.25);
+        color: #fff;
+    }
+
+    .form-control-crypto::placeholder {
+        color: var(--text-muted);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .balance-amount {
+            font-size: 2.5rem;
+        }
+        
+        .load-funds-section,
+        .transactions-section {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4" style="font-weight: 700; font-size: 2.5rem;">
+                <i class="bi bi-wallet2"></i> Mi Billetera
+            </h1>
+        </div>
+    </div>
+
+    <!-- Saldo Principal -->
+    <div class="row">
+        <div class="col-12">
+            <div class="balance-card">
+                <div class="balance-label">Balance Disponible</div>
+                <div class="balance-amount">{{ wallet.balance_usdc|floatformat:2 }}</div>
+                <div class="balance-currency">Dólar Cripto (USDC_MOCK)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total Enviado</div>
+            <div class="stat-value negative">-{{ total_enviado|floatformat:2 }} USDC</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Recibido</div>
+            <div class="stat-value positive">+{{ total_recibido|floatformat:2 }} USDC</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Tasa de Conversión</div>
+            <div class="stat-value">1 USDC = ${{ tasa_conversion|floatformat:2 }} ARS</div>
+        </div>
+    </div>
+
+    <!-- Cargar Fondos -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="load-funds-section">
+                <h2 class="load-funds-title">
+                    <i class="bi bi-cash-coin"></i> Cargar Fondos
+                </h2>
+                <form method="post" action="{% url 'usuarios:cargar_fondos' %}" id="loadFundsForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label" style="color: var(--text-muted); font-weight: 600;">
+                            Monto en Pesos Argentinos (ARS)
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text" style="background: rgba(0,0,0,0.3); border-color: rgba(0,212,255,0.3); color: #fff;">
+                                <i class="bi bi-currency-dollar"></i>
+                            </span>
+                            <input 
+                                type="number" 
+                                class="form-control form-control-crypto" 
+                                id="montoARS" 
+                                name="monto_ars" 
+                                placeholder="Ej: 50000" 
+                                min="1" 
+                                step="0.01"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Conversión en Tiempo Real -->
+                    <div class="conversion-display" id="conversionDisplay" style="display: none;">
+                        <div class="conversion-row">
+                            <span class="conversion-label">Recibirás:</span>
+                            <span class="conversion-value" id="montoUSDC">0.00 USDC</span>
+                        </div>
+                        <div class="conversion-row">
+                            <span class="conversion-label">Tasa de Conversión:</span>
+                            <span class="conversion-value" style="font-size: 1rem; color: var(--primary-crypto);">
+                                1 USDC = ${{ tasa_conversion|floatformat:2 }} ARS
+                            </span>
+                        </div>
+                        <div class="conversion-row mt-2" style="border-top: 1px solid rgba(0,212,255,0.2); padding-top: 1rem;">
+                            <span class="conversion-label">Nuevo Balance:</span>
+                            <span class="conversion-value" id="nuevoBalance">{{ wallet.balance_usdc|floatformat:2 }} USDC</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-load-funds w-100 mt-3" id="btnCargarFondos">
+                        <i class="bi bi-arrow-down-circle"></i> Cargar Fondos
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Transacciones -->
+    <div class="row">
+        <div class="col-12">
+            <div class="transactions-section">
+                <h2 class="transactions-title">
+                    <i class="bi bi-clock-history"></i> Historial de Movimientos
+                </h2>
+
+                {% if transacciones %}
+                    {% for transaccion in transacciones %}
+                        {% if transaccion.from_wallet.id == wallet.id %}
+                            <!-- Transacción Saliente -->
+                            <div class="transaction-item outgoing">
+                                <div class="transaction-header">
+                                    <div class="transaction-type">
+                                        <i class="bi bi-arrow-up-circle"></i> 
+                                        {{ transaccion.get_tipo_transaccion_display }}
+                                    </div>
+                                    <div class="transaction-amount negative">
+                                        -{{ transaccion.monto_usdc|floatformat:2 }} USDC
+                                    </div>
+                                </div>
+                                <div class="transaction-description">
+                                    {% if transaccion.tipo_transaccion == 'ESCROW_DEPOSIT' %}
+                                        <strong>Seña retenida - Trabajo #{{ transaccion.oferta_relacionada.id }}</strong>: 
+                                        {{ transaccion.oferta_relacionada.titulo }}
+                                    {% else %}
+                                        {{ transaccion.descripcion|default:"Sin descripción" }}
+                                    {% endif %}
+                                </div>
+                                <div class="transaction-meta">
+                                    <span class="transaction-date">
+                                        <i class="bi bi-calendar3"></i>
+                                        {{ transaccion.fecha_creacion|date:"d/m/Y H:i" }}
+                                    </span>
+                                    <span class="transaction-status status-{{ transaccion.status|lower }}">
+                                        {{ transaccion.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <!-- Transacción Entrante -->
+                            <div class="transaction-item incoming">
+                                <div class="transaction-header">
+                                    <div class="transaction-type">
+                                        <i class="bi bi-arrow-down-circle"></i> 
+                                        {{ transaccion.get_tipo_transaccion_display }}
+                                    </div>
+                                    <div class="transaction-amount positive">
+                                        +{{ transaccion.monto_usdc|floatformat:2 }} USDC
+                                    </div>
+                                </div>
+                                <div class="transaction-description">
+                                    {{ transaccion.descripcion|default:"Sin descripción" }}
+                                </div>
+                                <div class="transaction-meta">
+                                    <span class="transaction-date">
+                                        <i class="bi bi-calendar3"></i>
+                                        {{ transaccion.fecha_creacion|date:"d/m/Y H:i" }}
+                                    </span>
+                                    <span class="transaction-status status-{{ transaccion.status|lower }}">
+                                        {{ transaccion.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Aún no tienes movimientos en tu billetera.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Conversión en Tiempo Real
+    document.addEventListener('DOMContentLoaded', function() {
+        const montoARSInput = document.getElementById('montoARS');
+        const conversionDisplay = document.getElementById('conversionDisplay');
+        const montoUSDCSpan = document.getElementById('montoUSDC');
+        const nuevoBalanceSpan = document.getElementById('nuevoBalance');
+        const btnCargarFondos = document.getElementById('btnCargarFondos');
+        
+        const tasaConversion = {{ tasa_conversion }};
+        const balanceActual = {{ wallet.balance_usdc }};
+        
+        montoARSInput.addEventListener('input', function() {
+            const montoARS = parseFloat(this.value) || 0;
+            
+            if (montoARS > 0) {
+                // Calcular USDC
+                const montoUSDC = (montoARS / tasaConversion).toFixed(2);
+                const nuevoBalance = (balanceActual + parseFloat(montoUSDC)).toFixed(2);
+                
+                // Mostrar conversión
+                montoUSDCSpan.textContent = montoUSDC + ' USDC';
+                nuevoBalanceSpan.textContent = nuevoBalance + ' USDC';
+                conversionDisplay.style.display = 'block';
+                
+                // Animar los números
+                montoUSDCSpan.style.animation = 'none';
+                setTimeout(() => {
+                    montoUSDCSpan.style.animation = 'pulse 0.5s ease';
+                }, 10);
+            } else {
+                conversionDisplay.style.display = 'none';
+            }
+        });
+        
+        // Validación del formulario
+        document.getElementById('loadFundsForm').addEventListener('submit', function(e) {
+            const montoARS = parseFloat(montoARSInput.value) || 0;
+            
+            if (montoARS <= 0) {
+                e.preventDefault();
+                alert('Por favor, ingresa un monto válido mayor a cero.');
+                return false;
+            }
+            
+            btnCargarFondos.disabled = true;
+            btnCargarFondos.innerHTML = '<i class="bi bi-arrow-clockwise spinner-border spinner-border-sm"></i> Procesando...';
+        });
+    });
+    
+    // Animación CSS para el pulse
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}
     
     .conversion-rate {
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);

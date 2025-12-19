@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from .models import (
     UserProfile, JobOffer, Proposal, DelayJustification,
     Wallet, Transaction, WorkEvent
@@ -876,6 +876,7 @@ def solicitar_reembolso(request, oferta_id):
 
 
 @login_required
+@login_required
 def wallet_detalle(request):
     """
     Vista detallada de la billetera del usuario.
@@ -945,7 +946,7 @@ def cargar_fondos(request):
         tasa_conversion = Decimal('1250.00')
         monto_usdc = (monto_ars / tasa_conversion).quantize(
             Decimal('0.01'),
-            rounding='ROUND_HALF_UP'
+            rounding=ROUND_HALF_UP
         )
         
         # Obtener o crear wallet
