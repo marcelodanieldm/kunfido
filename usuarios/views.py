@@ -333,19 +333,29 @@ def job_detail_private(request, oferta_id):
     """
     Vista privada para el dueño de la oferta.
     Muestra tabla comparativa de todas las propuestas con botón de votación.
+    Las propuestas se ordenan por prioridad (mejor reputación y menos penalizaciones primero).
     """
     oferta = get_object_or_404(JobOffer, id=oferta_id, creador=request.user)
     
-    # Obtener propuestas ordenadas por monto
-    propuestas = oferta.propuestas.select_related(
+    # Obtener propuestas con información del perfil
+    propuestas_raw = oferta.propuestas.select_related(
         'profesional', 
         'profesional__profile'
-    ).order_by('monto')
+    ).all()
+    
+    # Ordenar por prioridad del profesional (mayor prioridad primero)
+    propuestas = sorted(
+        propuestas_raw,
+        key=lambda p: (
+            -p.profesional.profile.prioridad_ofertas,  # Mayor prioridad primero
+            p.monto  # Luego por menor monto
+        )
+    )
     
     # Calcular estadísticas
-    monto_minimo = propuestas.aggregate(Min('monto'))['monto__min']
-    promedio_monto = propuestas.aggregate(Avg('monto'))['monto__avg']
-    dias_promedio = propuestas.aggregate(Avg('dias_entrega'))['dias_entrega__avg']
+    monto_minimo = propuestas_raw.aggregate(Min('monto'))['monto__min'] if propuestas_raw else None
+    promedio_monto = propuestas_raw.aggregate(Avg('monto'))['monto__avg'] if propuestas_raw else None
+    dias_promedio = propuestas_raw.aggregate(Avg('dias_entrega'))['dias_entrega__avg'] if propuestas_raw else None
     
     context = {
         'oferta': oferta,
@@ -659,8 +669,11 @@ def aceptar_replica_atraso(request, justificacion_id):
 @require_POST
 def rechazar_replica_atraso(request, justificacion_id):
     """
-    Endpoint para que el cliente rechace la réplica (opcional).
-    La penalización se mantiene activa.
+    Endpoint para que el cliente rechace la réplica.
+    Aplica penalización al profesional:
+    - Reduce puntuación según días de atraso
+    - Incrementa contador de penalizaciones
+    - Afecta prioridad en futuras ofertas
     """
     justificacion = get_object_or_404(DelayJustification, id=justificacion_id)
     
@@ -669,9 +682,21 @@ def rechazar_replica_atraso(request, justificacion_id):
         messages.error(request, 'No tienes permiso para rechazar esta justificación.')
         return redirect('usuarios:public_feed')
     
-    messages.info(
+    # Verificar que no haya sido procesada previamente
+    if justificacion.penalizacion_omitida:
+        messages.info(request, 'Esta justificación ya fue aceptada anteriormente.')
+        return redirect('usuarios:job_detail_private', oferta_id=justificacion.oferta.id)
+    
+    # Aplicar penalización
+    reduccion = justificacion.rechazar_justificacion(rechazado_por=request.user)
+    profesional = justificacion.profesional
+    
+    messages.warning(
         request,
-        f'Has rechazado la justificación. La penalización por {justificacion.dias_atraso_justificados} días de atraso se mantiene.'
+        f'Has rechazado la justificación de {profesional.get_full_name() or profesional.username}. '
+        f'Se aplicó una penalización de {reduccion:.1f} puntos. '
+        f'Puntuación actual: {profesional.profile.puntuacion:.1f}/5.0. '
+        f'Esto afectará su prioridad en futuras ofertas.'
     )
     
     return redirect('usuarios:job_detail_private', oferta_id=justificacion.oferta.id)

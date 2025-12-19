@@ -44,6 +44,12 @@ class UserProfile(models.Model):
         help_text='Puntuación del usuario (0.0 - 5.0)'
     )
     
+    penalizaciones_acumuladas = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Penalizaciones Acumuladas',
+        help_text='Número de penalizaciones por atrasos no justificados'
+    )
+    
     fecha_creacion = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Fecha de Creación'
@@ -80,6 +86,39 @@ class UserProfile(models.Model):
             return Wallet.objects.get(user=self.user)
         except:
             return None
+    
+    def aplicar_penalizacion(self, dias_atraso):
+        """
+        Aplica penalización por atraso no justificado.
+        - Reduce la puntuación según días de atraso
+        - Incrementa contador de penalizaciones
+        """
+        # Calcular reducción de puntuación (0.1 puntos por cada día de atraso, máximo 1.0)
+        reduccion = min(dias_atraso * 0.1, 1.0)
+        self.puntuacion = max(0.0, self.puntuacion - reduccion)
+        
+        # Incrementar contador de penalizaciones
+        self.penalizaciones_acumuladas += 1
+        
+        self.save()
+        
+        return reduccion
+    
+    @property
+    def prioridad_ofertas(self):
+        """
+        Calcula la prioridad del profesional para aparecer en ofertas.
+        Mayor puntuación y menos penalizaciones = mayor prioridad.
+        Retorna un score de 0 a 100.
+        """
+        # Base: puntuación (0-5) convertida a escala 0-50
+        score_puntuacion = (self.puntuacion / 5.0) * 50
+        
+        # Penalización: cada penalización resta 5 puntos (máximo -50)
+        penalizacion = min(self.penalizaciones_acumuladas * 5, 50)
+        
+        # Score final (0-100)
+        return max(0, score_puntuacion - penalizacion)
 
 
 class JobOffer(models.Model):
@@ -177,6 +216,25 @@ class JobOffer(models.Model):
     def cantidad_propuestas(self):
         """Retorna la cantidad de propuestas recibidas."""
         return self.propuestas.count()
+    
+    @property
+    def dias_atraso(self):
+        """
+        Calcula los días de atraso entre la fecha de entrega pactada y la real.
+        Retorna:
+            - None si no hay fechas para comparar
+            - 0 si se entregó a tiempo o antes
+            - Número positivo de días de atraso
+        """
+        if not self.fecha_entrega_pactada or not self.fecha_entrega_real:
+            return None
+        
+        # Calcular diferencia en días
+        delta = self.fecha_entrega_real - self.fecha_entrega_pactada
+        dias = delta.days
+        
+        # Si es negativo o cero, se entregó a tiempo
+        return max(0, dias)
     
     @property
     def dias_atraso(self):
@@ -364,6 +422,27 @@ class DelayJustification(models.Model):
         self.fecha_aceptacion = timezone.now()
         self.aceptada_por = aceptado_por
         self.save()
+    
+    def rechazar_justificacion(self, rechazado_por):
+        """
+        Rechaza la justificación y aplica penalización al profesional.
+        - Reduce puntuación según días de atraso
+        - Incrementa contador de penalizaciones
+        - Afecta prioridad en futuras ofertas
+        """
+        from django.utils import timezone
+        
+        # Obtener perfil del profesional
+        perfil = self.profesional.profile
+        
+        # Aplicar penalización
+        reduccion = perfil.aplicar_penalizacion(self.dias_atraso_justificados)
+        
+        # Marcar como rechazada (penalizacion_omitida permanece False)
+        self.fecha_actualizacion = timezone.now()
+        self.save()
+        
+        return reduccion
 
 
 class Wallet(models.Model):

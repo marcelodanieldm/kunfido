@@ -315,7 +315,8 @@
                 <i class="bi bi-list-check"></i> Propuestas Recibidas
             </h3>
             <small class="text-muted">
-                Compara las ofertas y selecciona la mejor opción para tu proyecto
+                Compara las ofertas y selecciona la mejor opción para tu proyecto.
+                <br><strong>Ordenadas por prioridad:</strong> Mejor reputación y menos penalizaciones primero.
             </small>
         </div>
 
@@ -415,6 +416,14 @@
                                             <i class="bi bi-star"></i>
                                             Sin calificar
                                         </span>
+                                    {% endif %}
+                                    {% if propuesta.profesional.profile.penalizaciones_acumuladas > 0 %}
+                                        <br>
+                                        <small class="text-danger">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> 
+                                            {{ propuesta.profesional.profile.penalizaciones_acumuladas }} 
+                                            penalización{{ propuesta.profesional.profile.penalizaciones_acumuladas|pluralize:"es" }}
+                                        </small>
                                     {% endif %}
                                 </td>
                                 
