@@ -1,0 +1,658 @@
+{% extends 'base.html' %}
+
+{% block title %}Seguimiento - {{ job.title }} - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tracking-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+    
+    .tracking-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Barra de Tiempo Dinámica */
+    .time-progress-container {
+        background: #e9ecef;
+        border-radius: 10px;
+        height: 40px;
+        position: relative;
+        overflow: hidden;
+        margin: 2rem 0;
+    }
+    
+    .time-progress-bar {
+        height: 100%;
+        transition: width 0.5s ease, background-color 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        position: relative;
+    }
+    
+    .time-progress-bar.on-time {
+        background: linear-gradient(90deg, #4c6ef5 0%, #228be6 100%);
+    }
+    
+    .time-progress-bar.warning {
+        background: linear-gradient(90deg, #fd7e14 0%, #ffa94d 100%);
+    }
+    
+    .time-progress-bar.delayed {
+        background: linear-gradient(90deg, #f03e3e 0%, #ff6b6b 100%);
+        animation: pulse-red 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-red {
+        0%, 100% {
+            opacity: 1;
+            box-shadow: 0 0 0 0 rgba(240, 62, 62, 0.7);
+        }
+        50% {
+            opacity: 0.85;
+            box-shadow: 0 0 20px 10px rgba(240, 62, 62, 0.3);
+        }
+    }
+    
+    .progress-label {
+        position: absolute;
+        top: -30px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .progress-label.start {
+        left: 0;
+    }
+    
+    .progress-label.end {
+        right: 0;
+    }
+    
+    /* Panel de Alerta de Atraso */
+    .delay-alert {
+        background: linear-gradient(135deg, #f03e3e 0%, #ff6b6b 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        animation: shake 0.5s ease-in-out;
+        box-shadow: 0 5px 20px rgba(240, 62, 62, 0.3);
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .delay-alert h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .delay-icon {
+        font-size: 3rem;
+        animation: blink 1s ease-in-out infinite;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    /* Timeline de Eventos */
+    .timeline {
+        position: relative;
+        padding: 1rem 0;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 3rem;
+        padding-bottom: 2rem;
+    }
+    
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: 0.875rem;
+        top: 0;
+        bottom: -2rem;
+        width: 2px;
+        background: #dee2e6;
+    }
+    
+    .timeline-item:last-child::before {
+        display: none;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid #4c6ef5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        color: #4c6ef5;
+        font-weight: bold;
+    }
+    
+    .timeline-marker.success {
+        border-color: #28a745;
+        color: #28a745;
+    }
+    
+    .timeline-marker.warning {
+        border-color: #fd7e14;
+        color: #fd7e14;
+    }
+    
+    .timeline-marker.danger {
+        border-color: #f03e3e;
+        color: #f03e3e;
+    }
+    
+    .timeline-content {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    
+    /* Badges Personalizados */
+    .badge-delayed {
+        background: linear-gradient(135deg, #f03e3e 0%, #ff6b6b 100%);
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        animation: pulse-badge 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-badge {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .badge-warning-time {
+        background: linear-gradient(135deg, #fd7e14 0%, #ffa94d 100%);
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .badge-on-time {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+    
+    /* Botones de Acción */
+    .btn-explain {
+        background: linear-gradient(135deg, #fd7e14 0%, #ffa94d 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-explain:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(253, 126, 20, 0.4);
+        color: white;
+    }
+    
+    .btn-pardon {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-pardon:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        color: white;
+    }
+    
+    /* Info Stats */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .stat-box {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-box:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-3px);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+    
+    /* Modal Personalizado */
+    .modal-header {
+        background: var(--primary-gradient);
+        color: white;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <!-- Header -->
+    <div class="tracking-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">
+                    <i class="bi bi-graph-up-arrow"></i> Seguimiento del Trabajo
+                </h1>
+                <h3>{{ job.title }}</h3>
+                <p class="mb-0 opacity-75">
+                    <i class="bi bi-person-circle"></i> Cliente: {{ job.creator.nombre_completo }}
+                    {% if winning_bid %}
+                        <span class="mx-2">•</span>
+                        <i class="bi bi-tools"></i> Profesional: {{ winning_bid.professional.nombre_completo }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                {% if time_status == 'delayed' %}
+                    <span class="badge badge-delayed">
+                        <i class="bi bi-exclamation-triangle-fill"></i> ATRASADO
+                    </span>
+                {% elif time_status == 'warning' %}
+                    <span class="badge badge-warning-time">
+                        <i class="bi bi-clock-fill"></i> ÚLTIMAS 24HS
+                    </span>
+                {% else %}
+                    <span class="badge badge-on-time">
+                        <i class="bi bi-check-circle-fill"></i> EN TÉRMINO
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panel de Alerta de Atraso -->
+    {% if job.is_delayed %}
+    <div class="delay-alert">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="delay-icon">⚠️</div>
+            </div>
+            <div class="col">
+                <h3 class="mb-2">Trabajo con {{ days_delayed }} día{{ days_delayed|pluralize }} de atraso</h3>
+                <p class="mb-0">
+                    La fecha esperada de finalización era el {{ job.expected_completion_date|date:"d/m/Y H:i" }}.
+                    Se requiere tomar acción inmediata.
+                </p>
+            </div>
+            <div class="col-auto">
+                {% if is_oficio and not has_pending_justification %}
+                    <button class="btn btn-explain btn-lg" data-bs-toggle="modal" data-bs-target="#explainModal">
+                        <i class="bi bi-chat-left-text"></i> Explicar Motivo
+                    </button>
+                {% elif is_owner and has_pending_justification %}
+                    <a href="{% url 'review_delay_justification' pending_justification.id %}" class="btn btn-pardon btn-lg">
+                        <i class="bi bi-shield-check"></i> Revisar Justificación
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Barra de Tiempo Dinámica -->
+    <div class="tracking-card">
+        <h4 class="mb-4">
+            <i class="bi bi-calendar-range"></i> Progreso del Tiempo
+        </h4>
+        
+        <div style="position: relative; padding-top: 40px;">
+            <span class="progress-label start">
+                <i class="bi bi-flag"></i> Inicio<br>
+                <small>{{ job.start_confirmed_date|date:"d/m/Y H:i" }}</small>
+            </span>
+            <span class="progress-label end">
+                <i class="bi bi-flag-fill"></i> Fecha Esperada<br>
+                <small>{{ job.expected_completion_date|date:"d/m/Y H:i" }}</small>
+            </span>
+            
+            <div class="time-progress-container">
+                <div class="time-progress-bar {{ time_status }}" style="width: {{ progress_percentage }}%;">
+                    {{ progress_percentage|floatformat:0 }}%
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estadísticas del Progreso -->
+        <div class="stat-grid">
+            <div class="stat-box">
+                <span class="stat-value">{{ elapsed_days }}</span>
+                <span class="stat-label">Días Transcurridos</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value">{{ estimated_days }}</span>
+                <span class="stat-label">Días Estimados</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value">{{ remaining_days }}</span>
+                <span class="stat-label">{{ remaining_label }}</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value" style="color: {{ time_status == 'delayed' and 'red' or time_status == 'warning' and 'orange' or 'green' }};">
+                    {{ hours_until_deadline }}h
+                </span>
+                <span class="stat-label">Horas {{ remaining_label }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Información del Trabajo -->
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Timeline de Eventos -->
+            <div class="tracking-card">
+                <h4 class="mb-4">
+                    <i class="bi bi-clock-history"></i> Línea de Tiempo
+                </h4>
+                
+                <div class="timeline">
+                    <!-- Evento 1: Oferta Publicada -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker success">
+                            <i class="bi bi-check"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Oferta Publicada</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3"></i> {{ job.created_at|date:"d/m/Y H:i" }}
+                            </small>
+                            <p class="mb-0 mt-2">La oferta fue creada y publicada en la plataforma.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Evento 2: Propuesta Aceptada -->
+                    {% if winning_bid %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker success">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Propuesta Aceptada</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3"></i> {{ job.start_confirmed_date|date:"d/m/Y H:i" }}
+                            </small>
+                            <p class="mb-0 mt-2">
+                                Se aceptó la propuesta de <strong>{{ winning_bid.professional.nombre_completo }}</strong> 
+                                por ${{ winning_bid.amount_ars|floatformat:0 }} ARS.
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Evento 3: Estado Actual -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker {{ time_status == 'delayed' and 'danger' or time_status == 'warning' and 'warning' or 'success' }}">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Estado Actual</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3"></i> Ahora
+                            </small>
+                            <p class="mb-0 mt-2">
+                                {% if job.is_delayed %}
+                                    El trabajo está <strong class="text-danger">atrasado</strong> por {{ days_delayed }} día{{ days_delayed|pluralize }}.
+                                {% elif time_status == 'warning' %}
+                                    El trabajo está <strong class="text-warning">próximo a vencer</strong> (menos de 24 horas).
+                                {% else %}
+                                    El trabajo está <strong class="text-success">en término</strong>.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Evento 4: Justificaciones (si existen) -->
+                    {% if delay_registries %}
+                        {% for delay in delay_registries %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker {{ delay.status == 'ACCEPTED' and 'success' or delay.status == 'REJECTED' and 'danger' or 'warning' }}">
+                                <i class="bi bi-chat-left-text"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Justificación de Atraso</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar3"></i> {{ delay.created_at|date:"d/m/Y H:i" }}
+                                </small>
+                                <p class="mb-2 mt-2">{{ delay.reason|truncatewords:20 }}</p>
+                                <span class="badge {{ delay.status == 'ACCEPTED' and 'bg-success' or delay.status == 'REJECTED' and 'bg-danger' or 'bg-warning' }}">
+                                    {{ delay.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Evento Final: Fecha Esperada -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker {{ job.is_delayed and 'danger' or 'success' }}">
+                            <i class="bi bi-flag-fill"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Fecha Esperada de Finalización</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3"></i> {{ job.expected_completion_date|date:"d/m/Y H:i" }}
+                            </small>
+                            <p class="mb-0 mt-2">Fecha límite acordada para completar el trabajo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Información del Profesional -->
+            {% if winning_bid %}
+            <div class="tracking-card">
+                <h5 class="mb-3">
+                    <i class="bi bi-person-badge"></i> Profesional Asignado
+                </h5>
+                
+                <div class="text-center mb-3">
+                    <div class="professional-avatar mx-auto" style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ winning_bid.professional.user.first_name|first|default:"U"|upper }}{{ winning_bid.professional.user.last_name|first|default:""|upper }}
+                    </div>
+                    <h5 class="mt-3 mb-1">{{ winning_bid.professional.nombre_completo }}</h5>
+                    <div class="mb-2">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        <strong>{{ winning_bid.professional.puntuacion|floatformat:1 }}</strong> / 5.0
+                    </div>
+                    <span class="badge bg-primary">{{ winning_bid.professional.get_tipo_rol_display }}</span>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-2">
+                    <small class="text-muted d-block">Monto Acordado</small>
+                    <strong class="text-success">${{ winning_bid.amount_ars|floatformat:0 }} ARS</strong>
+                </div>
+                
+                <div>
+                    <small class="text-muted d-block">Días Estimados</small>
+                    <strong>{{ winning_bid.estimated_days }} día{{ winning_bid.estimated_days|pluralize }}</strong>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Acciones Disponibles -->
+            <div class="tracking-card">
+                <h5 class="mb-3">
+                    <i class="bi bi-lightning-charge"></i> Acciones
+                </h5>
+                
+                <div class="d-grid gap-2">
+                    {% if is_oficio and job.is_delayed and not has_pending_justification %}
+                        <button class="btn btn-explain" data-bs-toggle="modal" data-bs-target="#explainModal">
+                            <i class="bi bi-chat-left-text"></i> Explicar Motivo del Atraso
+                        </button>
+                    {% elif is_oficio and has_pending_justification %}
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-clock-history"></i> 
+                            Justificación enviada. Esperando revisión del cliente.
+                        </div>
+                    {% endif %}
+                    
+                    {% if is_owner and has_pending_justification %}
+                        <a href="{% url 'review_delay_justification' pending_justification.id %}" class="btn btn-pardon">
+                            <i class="bi bi-shield-check"></i> Indultar y Aceptar Atraso
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye"></i> Ver Detalle Completo
+                    </a>
+                    
+                    <a href="{% url 'job_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver a Ofertas
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Historial de Justificaciones -->
+            {% if delay_registries %}
+            <div class="tracking-card">
+                <h5 class="mb-3">
+                    <i class="bi bi-clipboard-data"></i> Historial de Justificaciones
+                </h5>
+                
+                {% for delay in delay_registries %}
+                <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <small class="text-muted">{{ delay.created_at|date:"d/m/Y H:i" }}</small>
+                        <span class="badge {{ delay.status == 'ACCEPTED' and 'bg-success' or delay.status == 'REJECTED' and 'bg-danger' or 'bg-warning' }} text-white">
+                            {{ delay.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="mb-0 small">{{ delay.reason|truncatewords:15 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Explicar Motivo -->
+<div class="modal fade" id="explainModal" tabindex="-1" aria-labelledby="explainModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="explainModalLabel">
+                    <i class="bi bi-chat-left-text"></i> Explicar Motivo del Atraso
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'submit_delay_justification' job.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Derecho a Réplica:</strong> Explica de manera clara y honesta las razones del atraso. 
+                        El cliente revisará tu explicación y decidirá si indulta el atraso.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reason" class="form-label fw-semibold">
+                            Justificación del Atraso <span class="text-danger">*</span>
+                        </label>
+                        <textarea 
+                            class="form-control" 
+                            id="reason" 
+                            name="reason" 
+                            rows="8" 
+                            required
+                            minlength="50"
+                            placeholder="Explica detalladamente las circunstancias que causaron el atraso. Sé específico sobre los problemas encontrados, las medidas que tomaste para solucionarlos y cuándo esperas completar el trabajo.&#10;&#10;Mínimo 50 caracteres."
+                        ></textarea>
+                        <div class="form-text">
+                            Mínimo 50 caracteres. Sé claro, específico y profesional.
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mb-0">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-exclamation-triangle"></i> Importante
+                        </h6>
+                        <ul class="mb-0">
+                            <li>Actualmente tienes <strong>{{ days_delayed }} día{{ days_delayed|pluralize }}</strong> de atraso</li>
+                            <li>Si el cliente <strong>indulta</strong>: No se aplicará penalización</li>
+                            <li>Si el cliente <strong>rechaza</strong>: Penalización de <strong>{{ days_delayed|floatformat:1 }} puntos</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-gradient">
+                        <i class="bi bi-send-fill"></i> Enviar Justificación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

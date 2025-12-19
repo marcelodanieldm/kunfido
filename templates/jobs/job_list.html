@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Ofertas de Trabajo - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .job-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .job-card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.25rem;
+    }
+    
+    .job-card-body {
+        padding: 1.5rem;
+        background: white;
+    }
+    
+    .badge-open {
+        background-color: #28a745;
+    }
+    
+    .badge-progress {
+        background-color: #007bff;
+    }
+    
+    .badge-closed {
+        background-color: #6c757d;
+    }
+    
+    .budget-tag {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-briefcase-fill text-primary"></i> Ofertas de Trabajo
+            </h1>
+            <p class="text-muted">Explora las oportunidades disponibles en la plataforma</p>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label fw-semibold">Estado</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="OPEN" {% if request.GET.status == 'OPEN' %}selected{% endif %}>Abierto</option>
+                    <option value="IN_PROGRESS" {% if request.GET.status == 'IN_PROGRESS' %}selected{% endif %}>En Progreso</option>
+                    <option value="CLOSED" {% if request.GET.status == 'CLOSED' %}selected{% endif %}>Cerrado</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="search" class="form-label fw-semibold">Buscar</label>
+                <input type="text" name="search" id="search" class="form-control" 
+                       placeholder="Título o descripción..." 
+                       value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-gradient me-2">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+                <a href="{% url 'job_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Lista de Ofertas -->
+    {% if jobs %}
+        <div class="row g-4">
+            {% for job in jobs %}
+            <div class="col-lg-6">
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h4 class="mb-1">{{ job.title }}</h4>
+                                <small>
+                                    <i class="bi bi-person-circle"></i> {{ job.creator.nombre_completo }}
+                                    {% if job.is_consorcio %}
+                                        <span class="badge bg-light text-dark">
+                                            <i class="bi bi-people-fill"></i> Consorcio
+                                        </span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                {% if job.status == 'OPEN' %}
+                                    <span class="badge badge-open">
+                                        <i class="bi bi-unlock-fill"></i> Abierto
+                                    </span>
+                                {% elif job.status == 'IN_PROGRESS' %}
+                                    <span class="badge badge-progress">
+                                        <i class="bi bi-hourglass-split"></i> En Progreso
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-closed">
+                                        <i class="bi bi-lock-fill"></i> Cerrado
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="job-card-body">
+                        <p class="text-muted mb-3">
+                            {{ job.description|truncatewords:30 }}
+                        </p>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-cash-coin text-success me-2 fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Presupuesto</small>
+                                        <span class="budget-tag">${{ job.budget_base_ars|floatformat:0 }}</span>
+                                        <small class="text-muted">ARS</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-chat-left-dots text-info me-2 fs-5"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Propuestas</small>
+                                        <span class="fw-bold">{{ job.bids.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> {{ job.created_at|timesince }} atrás
+                            </small>
+                            <a href="{% url 'job_detail' job.id %}" class="btn btn-gradient btn-sm">
+                                Ver Detalles <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <nav aria-label="Paginación" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No hay ofertas disponibles</h3>
+            <p class="text-muted">Vuelve más tarde para ver nuevas oportunidades</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

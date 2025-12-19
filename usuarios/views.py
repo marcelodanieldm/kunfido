@@ -999,6 +999,107 @@ def cargar_fondos(request):
     return redirect('usuarios:wallet_detalle')
 
 
+@login_required
+def wallet_escrow(request):
+    """
+    Vista de wallet con énfasis en fondos en garantía (escrow).
+    Muestra saldo disponible vs fondos bloqueados con diseño de alta seguridad.
+    """
+    # Obtener o crear wallet del usuario
+    wallet, created = Wallet.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'tipo_cuenta': 'USER',
+            'balance_usdc': Decimal('1000.00')
+        }
+    )
+    
+    # Importar modelos de jobs para acceder a EscrowTransaction
+    from jobs.models import EscrowTransaction, JobOffer
+    
+    # Obtener fondos en garantía (escrow)
+    # Como CLIENTE: fondos que depositó y están bloqueados
+    # Como PROFESIONAL: fondos que están bloqueados para liberarse a él
+    
+    fondos_bloqueados = []
+    total_en_garantia = Decimal('0.00')
+    
+    if request.user.profile.tipo_rol in ['PERSONA', 'CONSORCIO']:
+        # Cliente: ver fondos que depositó y están LOCKED
+        escrow_transactions = EscrowTransaction.objects.filter(
+            from_wallet=wallet,
+            status='LOCKED'
+        ).select_related('job', 'bid__professional__user')
+        
+        for tx in escrow_transactions:
+            total_en_garantia += tx.amount_usdc
+            fondos_bloqueados.append({
+                'transaccion': tx,
+                'tipo': 'depositado',
+                'job': tx.job,
+                'profesional': tx.bid.professional,
+                'monto': tx.amount_usdc,
+                'porcentaje': '30%' if tx.transaction_type == 'INITIAL_DEPOSIT' else '70%',
+                'puede_confirmar': tx.transaction_type == 'INITIAL_DEPOSIT',
+            })
+    
+    elif request.user.profile.tipo_rol == 'OFICIO':
+        # Profesional: ver fondos bloqueados que se liberarán a él
+        escrow_transactions = EscrowTransaction.objects.filter(
+            bid__professional__user=request.user,
+            status='LOCKED'
+        ).select_related('job', 'job__creator__user')
+        
+        for tx in escrow_transactions:
+            total_en_garantia += tx.amount_usdc
+            fondos_bloqueados.append({
+                'transaccion': tx,
+                'tipo': 'pendiente_recibir',
+                'job': tx.job,
+                'cliente': tx.job.creator,
+                'monto': tx.amount_usdc,
+                'porcentaje': '30%' if tx.transaction_type == 'INITIAL_DEPOSIT' else '70%',
+                'puede_confirmar': False,
+            })
+    
+    # Obtener historial de transacciones de escrow completadas
+    escrow_history = []
+    
+    if request.user.profile.tipo_rol in ['PERSONA', 'CONSORCIO']:
+        # Historial como cliente
+        history_txs = EscrowTransaction.objects.filter(
+            Q(from_wallet=wallet) | Q(job__creator__user=request.user)
+        ).exclude(status='LOCKED').select_related('job', 'bid__professional__user').order_by('-created_at')[:10]
+    else:
+        # Historial como profesional
+        history_txs = EscrowTransaction.objects.filter(
+            Q(to_wallet=wallet, status='RELEASED') | Q(bid__professional__user=request.user)
+        ).exclude(status='LOCKED').select_related('job', 'job__creator__user').order_by('-created_at')[:10]
+    
+    for tx in history_txs:
+        escrow_history.append({
+            'transaccion': tx,
+            'job': tx.job,
+            'monto': tx.amount_usdc,
+            'fecha': tx.released_at or tx.created_at,
+        })
+    
+    # Calcular saldo disponible (balance total - fondos en garantía)
+    saldo_disponible = wallet.balance_usdc - total_en_garantia
+    
+    context = {
+        'wallet': wallet,
+        'saldo_disponible': saldo_disponible,
+        'total_en_garantia': total_en_garantia,
+        'fondos_bloqueados': fondos_bloqueados,
+        'escrow_history': escrow_history,
+        'es_cliente': request.user.profile.tipo_rol in ['PERSONA', 'CONSORCIO'],
+        'es_profesional': request.user.profile.tipo_rol == 'OFICIO',
+    }
+    
+    return render(request, 'usuarios/wallet_escrow.html', context)
+
+
 @user_passes_test(lambda u: u.is_superuser)
 def admin_custom_dashboard(request):
     """

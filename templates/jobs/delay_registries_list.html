@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}Registros de Atrasos - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delay-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .delay-card:hover {
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+    }
+    
+    .badge-pending {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .badge-accepted {
+        background-color: #28a745;
+    }
+    
+    .badge-rejected {
+        background-color: #dc3545;
+    }
+    
+    .filter-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-clock-history text-primary"></i> Registros de Atrasos
+            </h1>
+            <p class="text-muted">
+                {% if user_role == 'OFICIO' %}
+                    Tus justificaciones de atrasos y su estado de revisión
+                {% else %}
+                    Justificaciones de atrasos pendientes de revisión en tus ofertas
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ delay_registries.paginator.count }}</div>
+            <small class="text-muted">Total de Registros</small>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {{ delay_registries.object_list|length }}
+            </div>
+            <small class="text-muted">En Esta Página</small>
+        </div>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filter-section">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label for="status" class="form-label fw-semibold">Estado</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>
+                        Pendiente
+                    </option>
+                    <option value="ACCEPTED" {% if request.GET.status == 'ACCEPTED' %}selected{% endif %}>
+                        Aceptado
+                    </option>
+                    <option value="REJECTED" {% if request.GET.status == 'REJECTED' %}selected{% endif %}>
+                        Rechazado
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button type="submit" class="btn btn-gradient me-2">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+                <a href="{% url 'delay_registries_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Lista de Registros -->
+    {% if delay_registries %}
+        {% for delay in delay_registries %}
+        <div class="delay-card">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-2">
+                                <i class="bi bi-briefcase"></i> {{ delay.bid.job_offer.title }}
+                            </h5>
+                            <div class="mb-2">
+                                {% if user_role == 'OFICIO' %}
+                                    <small class="text-muted">
+                                        <i class="bi bi-person"></i> Cliente: {{ delay.bid.job_offer.creator.nombre_completo }}
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted">
+                                        <i class="bi bi-person"></i> Profesional: {{ delay.bid.professional.nombre_completo }}
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            {% if delay.status == 'PENDING' %}
+                                <span class="badge badge-pending">
+                                    <i class="bi bi-hourglass-split"></i> Pendiente
+                                </span>
+                            {% elif delay.status == 'ACCEPTED' %}
+                                <span class="badge badge-accepted">
+                                    <i class="bi bi-check-circle-fill"></i> Aceptado
+                                </span>
+                            {% else %}
+                                <span class="badge badge-rejected">
+                                    <i class="bi bi-x-circle-fill"></i> Rechazado
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="text-muted mb-0" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            {{ delay.reason }}
+                        </p>
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-auto">
+                            <span class="badge bg-danger">
+                                <i class="bi bi-exclamation-triangle"></i> {{ delay.days_delayed }} día{{ delay.days_delayed|pluralize }} de atraso
+                            </span>
+                        </div>
+                        <div class="col-auto">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3"></i> {{ delay.created_at|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                        {% if delay.reviewed_at %}
+                        <div class="col-auto">
+                            <small class="text-muted">
+                                <i class="bi bi-check2-circle"></i> Revisado: {{ delay.reviewed_at|date:"d/m/Y" }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 d-flex align-items-center justify-content-end">
+                    <div class="text-end">
+                        {% if delay.status == 'PENDING' %}
+                            {% if user_role == 'OFICIO' %}
+                                <p class="text-muted mb-2">
+                                    <i class="bi bi-info-circle"></i> Esperando revisión
+                                </p>
+                                <a href="{% url 'job_detail' delay.bid.job_offer.id %}" class="btn btn-outline-primary btn-sm">
+                                    Ver Trabajo
+                                </a>
+                            {% else %}
+                                <a href="{% url 'review_delay_justification' delay.id %}" class="btn btn-gradient">
+                                    <i class="bi bi-clipboard-check"></i> Revisar Ahora
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'job_detail' delay.bid.job_offer.id %}" class="btn btn-outline-secondary btn-sm">
+                                Ver Trabajo
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <nav aria-label="Paginación" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">No hay registros de atrasos</h3>
+            <p class="text-muted">
+                {% if user_role == 'OFICIO' %}
+                    Cuando tengas atrasos en tus trabajos, podrás justificarlos aquí
+                {% else %}
+                    Cuando los profesionales envíen justificaciones, aparecerán aquí
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

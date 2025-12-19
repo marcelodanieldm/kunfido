@@ -1,4 +1,5 @@
 from django import template
+from decimal import Decimal
 
 register = template.Library()
 
@@ -22,3 +23,14 @@ def attr(obj, attr_name):
         return getattr(obj, attr_name)
     except (AttributeError, TypeError):
         return None
+
+@register.filter
+def mul(value, arg):
+    """
+    Template filter para multiplicar dos valores.
+    Uso: {{ value|mul:0.30 }}
+    """
+    try:
+        return Decimal(str(value)) * Decimal(str(arg))
+    except (ValueError, TypeError, AttributeError):
+        return 0

@@ -365,6 +365,29 @@
         </div>
     </div>
 
+    <!-- Acceso Rápido a Wallet Escrow -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="alert alert-info" style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 255, 0.1) 100%); border: 2px solid #00d4ff; border-radius: 12px;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="bi bi-shield-lock-fill me-2" style="color: #00d4ff;"></i>
+                            Sistema de Garantía Blindado
+                        </h5>
+                        <p class="mb-0 small text-muted">
+                            Visualiza tus fondos en garantía (escrow) con recibos digitales transparentes
+                        </p>
+                    </div>
+                    <a href="{% url 'usuarios:wallet_escrow' %}" class="btn btn-primary">
+                        <i class="bi bi-lock-fill me-2"></i>
+                        Ver Wallet Escrow
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Cargar Fondos -->
     <div class="row mb-4">
         <div class="col-lg-8 mx-auto">

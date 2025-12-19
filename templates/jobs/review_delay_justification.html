@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block title %}Revisar Justificación de Atraso - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+    
+    .review-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .info-item-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .justification-box {
+        background: #f8f9fa;
+        border-left: 4px solid var(--primary-color);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+    }
+    
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .btn-accept {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+    }
+    
+    .btn-accept:hover {
+        background: linear-gradient(135deg, #218838 0%, #1ea87a 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-reject {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        border: none;
+    }
+    
+    .btn-reject:hover {
+        background: linear-gradient(135deg, #bd2130 0%, #a71d2a 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+    }
+    
+    .professional-info {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .professional-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <!-- Header -->
+            <div class="review-header">
+                <div class="text-center">
+                    <i class="bi bi-clipboard-check display-3 mb-3"></i>
+                    <h2 class="mb-2">Revisar Justificación de Atraso</h2>
+                    <p class="mb-0 opacity-75">Evalúa la explicación del profesional y decide si aceptas o rechazas el atraso</p>
+                </div>
+            </div>
+            
+            <!-- Información del Trabajo -->
+            <div class="review-card">
+                <h4 class="mb-4">
+                    <i class="bi bi-briefcase text-primary"></i> Información del Trabajo
+                </h4>
+                
+                <h5 class="mb-3">{{ job.title }}</h5>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-item-value">{{ delay_registry.days_delayed }}</span>
+                        <small class="text-muted">Días de Atraso</small>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-item-value">{{ job.start_confirmed_date|date:"d/m/Y" }}</span>
+                        <small class="text-muted">Fecha de Inicio</small>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-item-value">{{ job.expected_completion_date|date:"d/m/Y" }}</span>
+                        <small class="text-muted">Fecha Esperada</small>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-item-value">{{ bid.estimated_days }}</span>
+                        <small class="text-muted">Días Estimados</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Información del Profesional -->
+            <div class="review-card">
+                <h4 class="mb-3">
+                    <i class="bi bi-person text-primary"></i> Profesional
+                </h4>
+                
+                <div class="professional-info">
+                    <div class="professional-avatar">
+                        {{ bid.professional.user.first_name|first|default:"U"|upper }}{{ bid.professional.user.last_name|first|default:""|upper }}
+                    </div>
+                    <div>
+                        <h5 class="mb-1">{{ bid.professional.nombre_completo }}</h5>
+                        <div class="mb-1">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <strong>{{ bid.professional.puntuacion|floatformat:1 }}</strong> / 5.0
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-award"></i> {{ bid.professional.get_tipo_rol_display }}
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>Penalización Potencial:</strong> 
+                    Si rechazas la justificación, se aplicará una penalización de 
+                    <strong>{{ delay_registry.days_delayed|floatformat:1 }} puntos</strong> al puntaje del profesional.
+                </div>
+            </div>
+            
+            <!-- Justificación -->
+            <div class="review-card">
+                <h4 class="mb-3">
+                    <i class="bi bi-chat-left-text text-primary"></i> Justificación del Atraso
+                </h4>
+                
+                <div class="justification-box">
+                    <p style="white-space: pre-wrap; margin-bottom: 0;">{{ delay_registry.reason }}</p>
+                </div>
+                
+                <small class="text-muted">
+                    <i class="bi bi-calendar3"></i> 
+                    Enviada el {{ delay_registry.created_at|date:"d/m/Y" }} a las {{ delay_registry.created_at|time:"H:i" }}
+                </small>
+            </div>
+            
+            <!-- Acciones -->
+            <div class="review-card">
+                <h4 class="mb-3">
+                    <i class="bi bi-hand-thumbs-up text-primary"></i> Tu Decisión
+                </h4>
+                
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Considera lo siguiente:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li><strong>Aceptar:</strong> El profesional no recibirá penalización. Las razones son válidas.</li>
+                        <li><strong>Rechazar:</strong> Se aplicará penalización al puntaje del profesional.</li>
+                    </ul>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="action-buttons">
+                        <button 
+                            type="submit" 
+                            name="action" 
+                            value="accept" 
+                            class="btn btn-accept btn-lg"
+                            onclick="return confirm('¿Estás seguro de ACEPTAR esta justificación? No se aplicará penalización al profesional.')">
+                            <i class="bi bi-check-circle-fill"></i> Aceptar Justificación
+                        </button>
+                        
+                        <button 
+                            type="submit" 
+                            name="action" 
+                            value="reject" 
+                            class="btn btn-reject btn-lg"
+                            onclick="return confirm('¿Estás seguro de RECHAZAR esta justificación? Se aplicará penalización de {{ delay_registry.days_delayed|floatformat:1 }} puntos al profesional.')">
+                            <i class="bi bi-x-circle-fill"></i> Rechazar Justificación
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver sin Decidir
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
