@@ -203,6 +203,12 @@ class Proposal(models.Model):
         help_text='Número de versión de la propuesta (contraofertas)'
     )
     
+    voto_owner = models.BooleanField(
+        default=False,
+        verbose_name='Voto del Dueño',
+        help_text='Indica si el dueño de la oferta votó esta propuesta'
+    )
+    
     class Meta:
         verbose_name = 'Propuesta'
         verbose_name_plural = 'Propuestas'

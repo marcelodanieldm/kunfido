@@ -13,6 +13,10 @@ Plataforma Django completa para la gestión de servicios, obras y consorcios con
   - Sistema de puntuación (0.0 - 5.0)
 - ✅ Panel de administración personalizado con estadísticas
 - ✅ Creación automática de perfiles mediante signals
+- ✅ **Sistema de Ofertas y Propuestas**:
+  - JobOffer: Ofertas de trabajo con estado y presupuesto
+  - Proposal: Propuestas con sistema de contraofertas (versionado)
+  - Sistema de votación para dueños de ofertas
 
 ### Frontend
 - ✅ **Bootstrap 5.3.2** - Framework responsive moderno
@@ -24,6 +28,11 @@ Plataforma Django completa para la gestión de servicios, obras y consorcios con
   - 🔧 **OFICIO**: Trabajos ganados, propuestas
 - ✅ Sistema de métricas y estadísticas visuales
 - ✅ Diseño responsive con animaciones y efectos hover
+- ✅ **Feed Público de Trabajos**:
+  - Accesible sin login
+  - Vista pública de detalles con botón "Ingresa para ofertar"
+  - Vista privada para dueños con tabla comparativa de propuestas
+  - Sistema de votación/selección de propuestas
 
 ## 🚀 Instalación
 
@@ -139,6 +148,7 @@ python manage.py runserver
 ### Acceder a la aplicación
 
 - **Home:** `http://localhost:8000/`
+- **Feed Público:** `http://localhost:8000/trabajos/` (sin login requerido)
 - **Onboarding (selección de rol):** `http://localhost:8000/onboarding/`
 - **Dashboard:** `http://localhost:8000/dashboard/`
 - **Admin:** `http://localhost:8000/admin/`
@@ -152,14 +162,44 @@ Página principal responsive con:
 - 3 tarjetas de features (Personas, Consorcios, Oficios)
 - Integración con autenticación
 
-### 2. **Onboarding** (`/onboarding/`)
+### 2. **Feed Público de Trabajos** (`/trabajos/`) ⭐ NUEVO
+Feed público accesible sin autenticación con:
+- Lista de ofertas de trabajo abiertas
+- Estadísticas generales (trabajos activos, propuestas, presupuesto promedio)
+- Información de propuestas y mejor oferta por trabajo
+- CTA para login/registro para usuarios no autenticados
+- Link directo a enviar propuesta para usuarios OFICIO
+
+### 3. **Detalle Público de Trabajo** (`/trabajos/<id>/`) ⭐ NUEVO
+Vista pública del detalle de una oferta con:
+- Información completa del trabajo (título, descripción, zona, presupuesto)
+- Datos del publicador (con puntuación si disponible)
+- Contador de propuestas y mejor oferta
+- **Botón "Ingresa para ofertar"** para usuarios no autenticados
+- Botón "Ver Propuestas Recibidas" si eres el dueño de la oferta
+- Botón "Enviar Propuesta" para profesionales (OFICIO)
+
+### 4. **Vista Privada del Dueño** (`/ofertas/<id>/privado/`) ⭐ NUEVO
+Vista exclusiva para el creador de la oferta con:
+- **Tabla comparativa de propuestas** con columnas:
+  - Profesional (con avatar y versión de propuesta)
+  - Monto (destacando mejor oferta)
+  - Tiempo de entrega (días)
+  - Reputación (con badges de color según puntuación)
+  - Fecha de envío
+  - **Botón Votar/Votada** para seleccionar propuestas
+- Estadísticas rápidas (total propuestas, mejor oferta, promedios)
+- Highlight visual de mejor oferta y propuestas votadas
+- Información adicional del trabajo y consejos
+
+### 5. **Onboarding** (`/onboarding/`)
 Sistema de selección de rol con:
 - 3 tarjetas interactivas (PERSONA, CONSORCIO, OFICIO)
 - Animaciones hover y efectos visuales
 - Campo opcional para zona geográfica
 - Diseño con gradientes personalizados por rol
 
-### 3. **Dashboard** (`/dashboard/`)
+### 6. **Dashboard** (`/dashboard/`)
 Dashboard personalizado según el rol del usuario:
 
 #### 👤 PERSONA
@@ -194,20 +234,28 @@ kunfido/
 │   ├── asgi.py
 │   └── wsgi.py
 ├── usuarios/                # App de usuarios
-│   ├── models.py           # Modelo UserProfile extendido
+│   ├── models.py           # UserProfile, JobOffer, Proposal
 │   ├── admin.py            # Admin personalizado con estadísticas
 │   ├── signals.py          # Señales para crear perfiles automáticamente
-│   ├── views.py            # Vistas: home, onboarding, dashboard
+│   ├── views.py            # Vistas completas (public, private)
 │   ├── urls.py             # URLs de la app
+│   ├── templatetags/
+│   │   └── usuarios_tags.py  # Filtros personalizados
 │   └── apps.py
 ├── templates/
 │   ├── base.html           # Layout base con Bootstrap 5
 │   ├── admin/
 │   │   └── index.html      # Admin con métricas personalizadas
 │   └── usuarios/
-│       ├── home.html              # Página principal
-│       ├── onboarding_rol.html    # Selección de rol
-│       └── dashboard_home.html    # Dashboard condicional
+│       ├── home.html                # Página principal
+│       ├── onboarding_rol.html      # Selección de rol
+│       ├── dashboard_home.html      # Dashboard condicional
+│       ├── public_feed.html         # Feed público de trabajos ⭐
+│       ├── job_detail_public.html   # Detalle público ⭐
+│       ├── job_detail_private.html  # Vista dueño con tabla ⭐
+│       ├── ofertas_lista.html       # Lista de ofertas
+│       ├── oferta_detalle.html      # Detalle de oferta
+│       └── crear_propuesta.html     # Crear/actualizar propuesta
 ├── manage.py
 ├── requirements.txt        # Django, django-allauth, python-decouple, Pillow
 ├── .env.example           # Template de variables de entorno
@@ -230,19 +278,41 @@ kunfido/
 - Bootstrap Icons 1.11.3
 - Vanilla JavaScript (interactividad)
 
-## 👥 Modelo de Usuario
+## 👥 Modelos de Datos
 
-El modelo `UserProfile` extiende el usuario de Django con:
-
+### UserProfile
+Extiende el usuario de Django con:
 - `tipo_rol`: PERSONA, CONSORCIO u OFICIO (choices)
 - `zona`: Zona geográfica (texto libre, opcional)
 - `puntuacion`: Float de 0.0 a 5.0 (con validadores)
 - `fecha_creacion`: Timestamp de creación (auto)
 - `fecha_actualizacion`: Timestamp de última actualización (auto)
 
-### Propiedades adicionales:
+#### Propiedades adicionales:
 - `email`: Retorna el email del usuario
 - `nombre_completo`: Retorna nombre completo o username
+
+### JobOffer ⭐ NUEVO
+Modelo para ofertas de trabajo:
+- `creador`: Usuario que crea la oferta (ForeignKey)
+- `titulo`: Título descriptivo
+- `descripcion`: Descripción detallada (opcional)
+- `zona`: Zona geográfica del trabajo
+- `presupuesto_ars`: Presupuesto estimado en ARS
+- `status`: ABIERTA, EN_PROGRESO, FINALIZADA, CANCELADA
+- `fecha_creacion`, `fecha_actualizacion`
+
+### Proposal ⭐ NUEVO
+Modelo para propuestas de profesionales:
+- `oferta`: Oferta de trabajo (ForeignKey)
+- `profesional`: Usuario OFICIO que envía propuesta (ForeignKey)
+- `monto`: Monto propuesto en ARS
+- `dias_entrega`: Días estimados para completar
+- `comentario`: Detalles adicionales (opcional)
+- `version`: Número de versión (auto-incrementa en actualizaciones)
+- `voto_owner`: Boolean si el dueño votó esta propuesta ⭐
+- `fecha_creacion`, `fecha_actualizacion`
+- **Constraint**: unique_together en (oferta, profesional) - solo 1 propuesta por profesional por oferta
 
 ## 🎨 Características del Frontend
 

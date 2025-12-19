@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}{{ oferta.titulo }} - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-detail-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .detail-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-row {
+        padding: 1rem 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .label {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .value {
+        font-size: 1.125rem;
+        color: #212529;
+        font-weight: 500;
+    }
+    
+    .login-cta-box {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .proposals-info-box {
+        background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .creator-card {
+        background: #f8f9fa;
+        border-radius: 15px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .creator-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:public_feed' %}">Trabajos</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ oferta.titulo }}</li>
+        </ol>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="job-detail-hero">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold mb-3">{{ oferta.titulo }}</h1>
+                <div class="d-flex gap-3 flex-wrap">
+                    <span class="badge bg-white text-dark fs-6 px-3 py-2">
+                        <i class="bi bi-geo-alt-fill text-warning"></i> {{ oferta.zona }}
+                    </span>
+                    <span class="badge bg-white text-dark fs-6 px-3 py-2">
+                        <i class="bi bi-people-fill text-info"></i> {{ num_propuestas }} propuestas
+                    </span>
+                    <span class="badge bg-light text-dark fs-6 px-3 py-2">
+                        <i class="bi bi-clock-fill text-primary"></i> {{ oferta.fecha_creacion|timesince }} atrás
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="fs-2 fw-bold">
+                    <i class="bi bi-cash-stack"></i> ${{ oferta.presupuesto_ars|floatformat:0 }}
+                </div>
+                <small class="text-white-50">Presupuesto estimado</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información Principal -->
+        <div class="col-lg-8">
+            <!-- Descripción -->
+            <div class="detail-card">
+                <h3 class="mb-4">
+                    <i class="bi bi-file-text text-primary"></i> Descripción del Trabajo
+                </h3>
+                <div class="fs-5 text-muted lh-lg">
+                    {% if oferta.descripcion %}
+                        {{ oferta.descripcion|linebreaks }}
+                    {% else %}
+                        <em class="text-muted">No hay descripción disponible</em>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Detalles -->
+            <div class="detail-card">
+                <h3 class="mb-4">
+                    <i class="bi bi-info-circle text-primary"></i> Detalles del Proyecto
+                </h3>
+                
+                <div class="info-row">
+                    <div class="label">Zona de Trabajo</div>
+                    <div class="value">
+                        <i class="bi bi-geo-alt-fill text-warning"></i> {{ oferta.zona }}
+                    </div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="label">Presupuesto</div>
+                    <div class="value">
+                        <i class="bi bi-cash text-success"></i> ${{ oferta.presupuesto_ars|floatformat:0 }} ARS
+                    </div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="label">Estado</div>
+                    <div class="value">
+                        {% if oferta.status == 'ABIERTA' %}
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle-fill"></i> Abierta
+                            </span>
+                        {% elif oferta.status == 'EN_PROGRESO' %}
+                            <span class="badge bg-primary fs-6">
+                                <i class="bi bi-hourglass-split"></i> En Progreso
+                            </span>
+                        {% elif oferta.status == 'COMPLETADA' %}
+                            <span class="badge bg-dark fs-6">
+                                <i class="bi bi-check-all"></i> Completada
+                            </span>
+                        {% elif oferta.status == 'CANCELADA' %}
+                            <span class="badge bg-danger fs-6">
+                                <i class="bi bi-x-circle-fill"></i> Cancelada
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="info-row">
+                    <div class="label">Fecha de Publicación</div>
+                    <div class="value">
+                        <i class="bi bi-calendar3"></i> {{ oferta.fecha_creacion|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de Propuestas -->
+            {% if monto_minimo %}
+            <div class="proposals-info-box">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center mb-3 mb-md-0">
+                        <i class="bi bi-trophy-fill text-warning" style="font-size: 3rem;"></i>
+                        <h4 class="mt-2 mb-0">Mejor Oferta</h4>
+                        <div class="fs-2 fw-bold text-success">${{ monto_minimo|floatformat:0 }}</div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <i class="bi bi-people-fill text-info" style="font-size: 3rem;"></i>
+                        <h4 class="mt-2 mb-0">Total de Propuestas</h4>
+                        <div class="fs-2 fw-bold text-primary">{{ num_propuestas }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Información del Creador -->
+            <div class="detail-card">
+                <h5 class="mb-3">
+                    <i class="bi bi-person-circle text-primary"></i> Publicado por
+                </h5>
+                <div class="creator-card">
+                    <div class="creator-avatar">
+                        {{ oferta.creador.first_name.0|default:oferta.creador.username.0|upper }}
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5">
+                            {{ oferta.creador.get_full_name|default:oferta.creador.username }}
+                        </div>
+                        <small class="text-muted">
+                            {% if oferta.creador.profile.tipo_rol == 'CONSORCIO' %}
+                                <i class="bi bi-building"></i> Consorcio
+                            {% elif oferta.creador.profile.tipo_rol == 'PERSONA' %}
+                                <i class="bi bi-person"></i> Particular
+                            {% else %}
+                                <i class="bi bi-briefcase"></i> Profesional
+                            {% endif %}
+                        </small>
+                        {% if oferta.creador.profile.puntuacion %}
+                            <div class="mt-1">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <span class="fw-bold">{{ oferta.creador.profile.puntuacion|floatformat:1 }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA para ofertar -->
+            {% if user.is_authenticated %}
+                {% if user == oferta.creador %}
+                    <!-- Si el usuario es el creador, mostrar botón para ver sus propuestas -->
+                    <div class="detail-card text-center bg-light">
+                        <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 mb-3">Tu Oferta de Trabajo</h5>
+                        <p class="text-muted mb-3">
+                            Administra las propuestas que recibiste
+                        </p>
+                        <a href="{% url 'usuarios:job_detail_private' oferta.id %}" class="btn btn-gradient btn-lg w-100">
+                            <i class="bi bi-list-check"></i> Ver Propuestas Recibidas
+                        </a>
+                    </div>
+                {% elif user.profile.tipo_rol == 'OFICIO' %}
+                    <!-- Usuario autenticado profesional -->
+                    <div class="login-cta-box">
+                        <i class="bi bi-send-fill" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3 mb-3">¿Te interesa este trabajo?</h4>
+                        <p class="mb-4">
+                            Envía tu propuesta con tu mejor precio y tiempo de entrega
+                        </p>
+                        <a href="{% url 'usuarios:crear_propuesta' oferta.id %}" class="btn btn-gradient btn-lg px-5 w-100">
+                            <i class="bi bi-send"></i> Enviar Propuesta
+                        </a>
+                    </div>
+                {% else %}
+                    <!-- Usuario con rol diferente -->
+                    <div class="detail-card text-center bg-light">
+                        <i class="bi bi-info-circle text-info" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 mb-3">Rol Incompatible</h5>
+                        <p class="text-muted mb-0">
+                            Solo los profesionales de oficio pueden enviar propuestas
+                        </p>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Usuario no autenticado -->
+                <div class="login-cta-box">
+                    <i class="bi bi-lock-fill" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3 mb-3">¿Te interesa este trabajo?</h4>
+                    <p class="mb-4">
+                        Inicia sesión o regístrate para enviar tu propuesta
+                    </p>
+                    <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn btn-gradient btn-lg px-5 w-100 mb-2">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                    </a>
+                    <a href="{% url 'account_signup' %}" class="btn btn-outline-dark btn-lg px-5 w-100">
+                        <i class="bi bi-person-plus"></i> Registrarse Gratis
+                    </a>
+                    <small class="d-block mt-3 text-muted">
+                        <i class="bi bi-shield-check"></i> Registro 100% gratuito
+                    </small>
+                </div>
+            {% endif %}
+
+            <!-- Estadísticas Rápidas -->
+            <div class="detail-card">
+                <h5 class="mb-3">
+                    <i class="bi bi-graph-up text-success"></i> Actividad
+                </h5>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Vistas:</span>
+                    <span class="fw-bold">-</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Propuestas:</span>
+                    <span class="fw-bold">{{ num_propuestas }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Publicado:</span>
+                    <span class="fw-bold">{{ oferta.fecha_creacion|timesince }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón volver -->
+    <div class="text-center mt-4">
+        <a href="{% url 'usuarios:public_feed' %}" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-arrow-left"></i> Volver a Trabajos Disponibles
+        </a>
+    </div>
+</div>
+{% endblock %}

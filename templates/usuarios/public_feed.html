@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Trabajos Disponibles - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-feed {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .job-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    
+    .job-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .job-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .price-tag {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: inline-block;
+    }
+    
+    .proposals-badge {
+        background: #667eea;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .location-tag {
+        background: #ffc107;
+        color: #000;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .best-offer-alert {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-left: 4px solid #28a745;
+        padding: 1rem;
+        border-radius: 0 10px 10px 0;
+    }
+    
+    .login-cta {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Hero Section -->
+    <div class="hero-feed">
+        <h1 class="display-4 fw-bold mb-3">
+            <i class="bi bi-briefcase-fill"></i> Trabajos Disponibles
+        </h1>
+        <p class="lead mb-4">
+            Encuentra oportunidades laborales y envía tus propuestas
+        </p>
+        {% if not user.is_authenticated %}
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{% url 'account_login' %}" class="btn btn-light btn-lg px-5">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <a href="{% url 'account_signup' %}" class="btn btn-outline-light btn-lg px-5">
+                    Registrarse Gratis
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center p-3 border-0 shadow-sm">
+                <i class="bi bi-briefcase fs-1 text-primary mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ ofertas.count }}</h3>
+                <small class="text-muted">Trabajos Activos</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3 border-0 shadow-sm">
+                <i class="bi bi-people fs-1 text-success mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ total_propuestas }}</h3>
+                <small class="text-muted">Propuestas Enviadas</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3 border-0 shadow-sm">
+                <i class="bi bi-trophy fs-1 text-warning mb-2"></i>
+                <h3 class="fw-bold mb-0">${{ promedio_presupuesto|floatformat:0 }}</h3>
+                <small class="text-muted">Presupuesto Promedio</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Trabajos -->
+    {% if ofertas %}
+        {% for oferta in ofertas %}
+            <div class="job-card">
+                <div class="job-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="mb-2 fw-bold">
+                                <a href="{% url 'usuarios:job_detail_public' oferta.id %}" class="text-decoration-none text-dark">
+                                    {{ oferta.titulo }}
+                                </a>
+                            </h4>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="location-tag">
+                                    <i class="bi bi-geo-alt-fill"></i> {{ oferta.zona }}
+                                </span>
+                                <span class="proposals-badge">
+                                    <i class="bi bi-people-fill"></i> {{ oferta.num_propuestas }} propuestas
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end mt-3 mt-md-0">
+                            <div class="price-tag">
+                                ${{ oferta.presupuesto_ars|floatformat:0 }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if oferta.descripcion %}
+                        <p class="text-muted mb-3">
+                            {{ oferta.descripcion|truncatewords:30 }}
+                        </p>
+                    {% endif %}
+                    
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> Publicado {{ oferta.fecha_creacion|timesince }} atrás
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i class="bi bi-person-circle"></i> Por {{ oferta.creador.get_full_name|default:oferta.creador.username }}
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-end mt-3 mt-md-0">
+                            {% if oferta.monto_minimo %}
+                                <div class="best-offer-alert d-inline-block">
+                                    <small class="fw-bold">
+                                        <i class="bi bi-trophy-fill text-success"></i>
+                                        Mejor oferta: ${{ oferta.monto_minimo|floatformat:0 }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'usuarios:job_detail_public' oferta.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> Ver Detalles
+                        </a>
+                        
+                        {% if user.is_authenticated and user.profile.tipo_rol == 'OFICIO' %}
+                            <a href="{% url 'usuarios:crear_propuesta' oferta.id %}" class="btn btn-gradient">
+                                <i class="bi bi-send"></i> Enviar Propuesta
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 5rem; color: #ccc;"></i>
+            <h3 class="mt-3 text-muted">No hay trabajos disponibles</h3>
+            <p class="text-muted">Vuelve pronto para ver nuevas oportunidades</p>
+        </div>
+    {% endif %}
+
+    <!-- CTA para usuarios no logueados -->
+    {% if not user.is_authenticated %}
+        <div class="login-cta">
+            <h3 class="mb-3">
+                <i class="bi bi-star-fill text-warning"></i> ¿Quieres enviar propuestas?
+            </h3>
+            <p class="mb-4">
+                Regístrate gratis como profesional y comienza a ganar trabajos hoy mismo
+            </p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{% url 'account_signup' %}" class="btn btn-gradient btn-lg px-5">
+                    <i class="bi bi-person-plus"></i> Registrarse Ahora
+                </a>
+                <a href="{% url 'account_login' %}" class="btn btn-outline-dark btn-lg px-5">
+                    Ya tengo cuenta
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

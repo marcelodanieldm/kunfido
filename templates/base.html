@@ -77,8 +77,8 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'usuarios:ofertas_lista' %}">
-                            <i class="bi bi-briefcase"></i> Ofertas
+                        <a class="nav-link" href="{% url 'usuarios:public_feed' %}">
+                            <i class="bi bi-briefcase"></i> Trabajos Disponibles
                         </a>
                     </li>
                     {% if user.is_authenticated %}
