@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Selecciona tu Rol - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .onboarding-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .role-card {
+        border: 3px solid transparent;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        height: 100%;
+        background: white;
+        overflow: hidden;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .role-card.selected {
+        border-color: #667eea;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .role-card-header {
+        padding: 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .role-card.persona .role-card-header {
+        background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+    }
+    
+    .role-card.consorcio .role-card-header {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    }
+    
+    .role-card.oficio .role-card-header {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    }
+    
+    .role-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .role-card-body {
+        padding: 2rem;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .feature-list li {
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .feature-list li i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+    
+    .radio-input {
+        display: none;
+    }
+    
+    .select-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #667eea;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s ease;
+    }
+    
+    .role-card.selected .select-badge {
+        opacity: 1;
+        transform: scale(1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="onboarding-container">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="bi bi-stars text-warning"></i> ¡Bienvenido a Kunfido!
+            </h1>
+            <p class="lead text-muted">
+                Selecciona el tipo de perfil que mejor te represente para personalizar tu experiencia
+            </p>
+        </div>
+
+        <form method="post" id="onboardingForm">
+            {% csrf_token %}
+            
+            <div class="row g-4 mb-4">
+                <!-- Tarjeta PERSONA -->
+                <div class="col-md-4">
+                    <label for="rol-persona" class="d-block">
+                        <input type="radio" name="tipo_rol" value="PERSONA" id="rol-persona" class="radio-input" required>
+                        <div class="role-card persona position-relative" data-role="persona">
+                            <div class="select-badge">
+                                <i class="bi bi-check-circle-fill"></i> Seleccionado
+                            </div>
+                            <div class="role-card-header">
+                                <div class="role-icon">
+                                    <i class="bi bi-person-circle"></i>
+                                </div>
+                                <h3 class="fw-bold">Persona</h3>
+                                <p class="mb-0 text-muted">Usuario individual</p>
+                            </div>
+                            <div class="role-card-body">
+                                <p class="mb-3">Ideal para usuarios individuales que buscan servicios para su hogar.</p>
+                                <ul class="feature-list">
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Solicita servicios profesionales</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Califica trabajos realizados</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Compara presupuestos</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Gestiona tu hogar</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Tarjeta CONSORCIO -->
+                <div class="col-md-4">
+                    <label for="rol-consorcio" class="d-block">
+                        <input type="radio" name="tipo_rol" value="CONSORCIO" id="rol-consorcio" class="radio-input">
+                        <div class="role-card consorcio position-relative" data-role="consorcio">
+                            <div class="select-badge">
+                                <i class="bi bi-check-circle-fill"></i> Seleccionado
+                            </div>
+                            <div class="role-card-header">
+                                <div class="role-icon">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <h3 class="fw-bold">Consorcio</h3>
+                                <p class="mb-0 text-muted">Administración de edificios</p>
+                            </div>
+                            <div class="role-card-body">
+                                <p class="mb-3">Para administradores de consorcios y edificios que gestionan múltiples obras.</p>
+                                <ul class="feature-list">
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Gestiona obras del edificio</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Panel de control completo</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Múltiples proveedores</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Reportes detallados</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Tarjeta OFICIO -->
+                <div class="col-md-4">
+                    <label for="rol-oficio" class="d-block">
+                        <input type="radio" name="tipo_rol" value="OFICIO" id="rol-oficio" class="radio-input">
+                        <div class="role-card oficio position-relative" data-role="oficio">
+                            <div class="select-badge">
+                                <i class="bi bi-check-circle-fill"></i> Seleccionado
+                            </div>
+                            <div class="role-card-header">
+                                <div class="role-icon">
+                                    <i class="bi bi-tools"></i>
+                                </div>
+                                <h3 class="fw-bold">Oficio</h3>
+                                <p class="mb-0 text-muted">Profesional de servicios</p>
+                            </div>
+                            <div class="role-card-body">
+                                <p class="mb-3">Para profesionales que ofrecen sus servicios y buscan trabajos.</p>
+                                <ul class="feature-list">
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Recibe solicitudes de trabajo</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Envía presupuestos</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Construye tu reputación</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        <span>Gestiona tus trabajos</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Zona (opcional) -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-6">
+                    <label for="zona" class="form-label fw-bold">
+                        <i class="bi bi-geo-alt-fill"></i> Zona o Ubicación (Opcional)
+                    </label>
+                    <input type="text" class="form-control form-control-lg" 
+                           id="zona" name="zona" 
+                           placeholder="Ej: CABA, Zona Norte, Belgrano..."
+                           value="{{ user.profile.zona|default:'' }}">
+                    <div class="form-text">
+                        Ayúdanos a conectarte con servicios en tu área
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de envío -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-gradient btn-lg px-5 py-3" id="submitBtn">
+                    <i class="bi bi-check-circle-fill"></i> Confirmar y Continuar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Manejo de selección de tarjetas
+    document.querySelectorAll('.role-card').forEach(card => {
+        card.addEventListener('click', function() {
+            // Remover selección previa
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+            
+            // Agregar selección a la tarjeta clickeada
+            this.classList.add('selected');
+            
+            // Seleccionar el radio button correspondiente
+            const role = this.dataset.role;
+            document.getElementById('rol-' + role).checked = true;
+        });
+    });
+    
+    // Marcar como seleccionado si ya hay un radio button checked
+    document.querySelectorAll('.radio-input').forEach(radio => {
+        if (radio.checked) {
+            const card = radio.closest('label').querySelector('.role-card');
+            card.classList.add('selected');
+        }
+    });
+    
+    // Validación del formulario
+    document.getElementById('onboardingForm').addEventListener('submit', function(e) {
+        const selected = document.querySelector('input[name="tipo_rol"]:checked');
+        if (!selected) {
+            e.preventDefault();
+            alert('Por favor, selecciona un tipo de rol');
+        }
+    });
+</script>
+{% endblock %}

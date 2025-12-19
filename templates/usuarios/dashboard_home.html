@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .metric-card-header {
+        padding: 1.5rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+    
+    .metric-icon {
+        font-size: 2.5rem;
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+    }
+    
+    .metric-icon.success {
+        background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+        color: #155724;
+    }
+    
+    .metric-icon.info {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        color: #004085;
+    }
+    
+    .metric-icon.warning {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #856404;
+    }
+    
+    .metric-icon.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+    
+    .welcome-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .role-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.2);
+        border-radius: 25px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+    
+    .quick-action-btn {
+        border-radius: 10px;
+        padding: 1rem;
+        border: 2px dashed #dee2e6;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+        transition: all 0.3s ease;
+        color: #495057;
+    }
+    
+    .quick-action-btn:hover {
+        border-color: #667eea;
+        background: #f8f9fa;
+        color: #667eea;
+        transform: translateY(-2px);
+    }
+    
+    .recent-activity-item {
+        border-left: 3px solid #667eea;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #f8f9fa;
+        border-radius: 0 10px 10px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Card -->
+    <div class="welcome-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 fw-bold mb-2">
+                    ¡Hola, {{ user.get_full_name|default:user.username }}! 👋
+                </h1>
+                <p class="mb-2 fs-5">Bienvenido a tu panel de control</p>
+                <div class="role-badge">
+                    {% if user.profile.tipo_rol == 'PERSONA' %}
+                        <i class="bi bi-person-circle"></i> Persona
+                    {% elif user.profile.tipo_rol == 'CONSORCIO' %}
+                        <i class="bi bi-building"></i> Consorcio
+                    {% elif user.profile.tipo_rol == 'OFICIO' %}
+                        <i class="bi bi-tools"></i> Oficio
+                    {% endif %}
+                    {% if user.profile.zona %}
+                        | <i class="bi bi-geo-alt-fill"></i> {{ user.profile.zona }}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4 text-center text-md-end">
+                <div class="fs-1">⭐</div>
+                <div class="fs-3 fw-bold">{{ user.profile.puntuacion|floatformat:1 }}</div>
+                <div class="small">Tu Puntuación</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas según el rol -->
+    {% if user.profile.tipo_rol == 'OFICIO' %}
+        <!-- Dashboard para OFICIO -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon success mx-auto">
+                            <i class="bi bi-trophy-fill"></i>
+                        </div>
+                        <div class="metric-value text-success">24</div>
+                        <div class="metric-label">Trabajos Ganados</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon info mx-auto">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="metric-value text-info">8</div>
+                        <div class="metric-label">En Progreso</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon warning mx-auto">
+                            <i class="bi bi-inbox-fill"></i>
+                        </div>
+                        <div class="metric-value text-warning">12</div>
+                        <div class="metric-label">Propuestas Enviadas</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon primary mx-auto">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="metric-value text-primary">$45.8K</div>
+                        <div class="metric-label">Ingresos Totales</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de acciones rápidas para OFICIO -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-list-task"></i> Trabajos Recientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Reparación de Plomería - Edificio Central</h6>
+                                    <small class="text-muted">Completado hace 2 días</small>
+                                </div>
+                                <span class="badge bg-success">Finalizado</span>
+                            </div>
+                        </div>
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Instalación Eléctrica - Departamento 5B</h6>
+                                    <small class="text-muted">En progreso</small>
+                                </div>
+                                <span class="badge bg-warning">En Curso</span>
+                            </div>
+                        </div>
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Pintura General - Casa Particular</h6>
+                                    <small class="text-muted">Propuesta enviada</small>
+                                </div>
+                                <span class="badge bg-info">Pendiente</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Acciones Rápidas</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="#" class="quick-action-btn mb-3">
+                            <i class="bi bi-search fs-4"></i>
+                            <div class="mt-2 fw-bold">Buscar Trabajos</div>
+                        </a>
+                        <a href="#" class="quick-action-btn mb-3">
+                            <i class="bi bi-file-earmark-text fs-4"></i>
+                            <div class="mt-2 fw-bold">Mis Propuestas</div>
+                        </a>
+                        <a href="#" class="quick-action-btn">
+                            <i class="bi bi-gear fs-4"></i>
+                            <div class="mt-2 fw-bold">Configuración</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif user.profile.tipo_rol == 'CONSORCIO' %}
+        <!-- Dashboard para CONSORCIO -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon success mx-auto">
+                            <i class="bi bi-building-fill"></i>
+                        </div>
+                        <div class="metric-value text-success">15</div>
+                        <div class="metric-label">Obras en el Edificio</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon info mx-auto">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="metric-value text-info">32</div>
+                        <div class="metric-label">Obras Completadas</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon warning mx-auto">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="metric-value text-warning">48</div>
+                        <div class="metric-label">Proveedores Activos</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon primary mx-auto">
+                            <i class="bi bi-cash-coin"></i>
+                        </div>
+                        <div class="metric-value text-primary">$125K</div>
+                        <div class="metric-label">Presupuesto Mensual</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de acciones rápidas para CONSORCIO -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-building-gear"></i> Obras Recientes del Edificio</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Mantenimiento de Ascensores</h6>
+                                    <small class="text-muted">Iniciado hace 1 semana</small>
+                                </div>
+                                <span class="badge bg-warning">En Progreso</span>
+                            </div>
+                        </div>
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Pintura de Fachada</h6>
+                                    <small class="text-muted">Planificado para próximo mes</small>
+                                </div>
+                                <span class="badge bg-info">Planificado</span>
+                            </div>
+                        </div>
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Reparación de Tanque de Agua</h6>
+                                    <small class="text-muted">Completado hace 3 días</small>
+                                </div>
+                                <span class="badge bg-success">Completado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Acciones Rápidas</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="#" class="quick-action-btn mb-3">
+                            <i class="bi bi-plus-circle fs-4"></i>
+                            <div class="mt-2 fw-bold">Nueva Obra</div>
+                        </a>
+                        <a href="#" class="quick-action-btn mb-3">
+                            <i class="bi bi-people fs-4"></i>
+                            <div class="mt-2 fw-bold">Gestionar Proveedores</div>
+                        </a>
+                        <a href="#" class="quick-action-btn">
+                            <i class="bi bi-file-earmark-bar-graph fs-4"></i>
+                            <div class="mt-2 fw-bold">Ver Reportes</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif user.profile.tipo_rol == 'PERSONA' %}
+        <!-- Dashboard para PERSONA -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon success mx-auto">
+                            <i class="bi bi-clipboard-check-fill"></i>
+                        </div>
+                        <div class="metric-value text-success">7</div>
+                        <div class="metric-label">Servicios Solicitados</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon info mx-auto">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div class="metric-value text-info">3</div>
+                        <div class="metric-label">En Proceso</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon warning mx-auto">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <div class="metric-value text-warning">5</div>
+                        <div class="metric-label">Profesionales Favoritos</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body text-center">
+                        <div class="metric-icon primary mx-auto">
+                            <i class="bi bi-house-heart-fill"></i>
+                        </div>
+                        <div class="metric-value text-primary">$8.5K</div>
+                        <div class="metric-label">Gastado en Servicios</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de acciones rápidas para PERSONA -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Actividad Reciente</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Reparación de Aire Acondicionado</h6>
+                                    <small class="text-muted">Completado hace 1 día</small>
+                                </div>
+                                <span class="badge bg-success">Finalizado</span>
+                            </div>
+                        </div>
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Instalación de Ventilador de Techo</h6>
+                                    <small class="text-muted">Esperando presupuestos</small>
+                                </div>
+                                <span class="badge bg-warning">Pendiente</span>
+                            </div>
+                        </div>
+                        <div class="recent-activity-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">Limpieza Profunda</h6>
+                                    <small class="text-muted">Programado para mañana</small>
+                                </div>
+                                <span class="badge bg-info">Próximo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-lightning-fill"></i> Acciones Rápidas</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="#" class="quick-action-btn mb-3">
+                            <i class="bi bi-plus-circle fs-4"></i>
+                            <div class="mt-2 fw-bold">Nuevo Servicio</div>
+                        </a>
+                        <a href="#" class="quick-action-btn mb-3">
+                            <i class="bi bi-search fs-4"></i>
+                            <div class="mt-2 fw-bold">Buscar Profesionales</div>
+                        </a>
+                        <a href="#" class="quick-action-btn">
+                            <i class="bi bi-star fs-4"></i>
+                            <div class="mt-2 fw-bold">Mis Favoritos</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- Si no tiene rol asignado -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card text-center p-5">
+                    <div class="card-body">
+                        <i class="bi bi-info-circle text-warning" style="font-size: 4rem;"></i>
+                        <h3 class="mt-3">Perfil Incompleto</h3>
+                        <p class="text-muted mb-4">
+                            Para acceder a todas las funcionalidades, por favor selecciona tu tipo de perfil
+                        </p>
+                        <a href="{% url 'usuarios:onboarding_rol' %}" class="btn btn-gradient btn-lg">
+                            <i class="bi bi-stars"></i> Completar Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
