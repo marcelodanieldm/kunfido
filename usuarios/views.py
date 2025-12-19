@@ -24,6 +24,120 @@ def home(request):
 
 
 @login_required
+def dashboard_home(request):
+    """
+    Dashboard personalizado según el rol del usuario.
+    - OFICIO: Muestra trabajos disponibles en su zona
+    - PERSONA/CONSORCIO: Muestra sus publicaciones y estado
+    - Sin rol: Redirige a selección de rol
+    """
+    # Verificar si el usuario tiene perfil
+    if not hasattr(request.user, 'profile'):
+        UserProfile.objects.create(user=request.user)
+    
+    # Si no ha seleccionado un rol, redirigir al onboarding
+    if not request.user.profile.tipo_rol:
+        messages.info(request, 'Por favor, completa tu perfil seleccionando un tipo de rol.')
+        return redirect('usuarios:onboarding_rol')
+    
+    context = {}
+    
+    # Obtener o crear wallet del usuario
+    wallet, created = Wallet.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'tipo_cuenta': 'USER',
+            'balance_usdc': Decimal('1000.00')
+        }
+    )
+    context['wallet'] = wallet
+    
+    # Dashboard para OFICIO: Trabajos disponibles en su zona
+    if request.user.profile.tipo_rol == 'OFICIO':
+        # Obtener zona del profesional
+        zona_profesional = request.user.profile.zona
+        
+        # Trabajos disponibles (ABIERTOS)
+        trabajos_disponibles = JobOffer.objects.filter(
+            status='ABIERTA'
+        ).annotate(
+            num_propuestas=Count('propuestas')
+        ).select_related('creador', 'creador__profile').order_by('-fecha_creacion')
+        
+        # Filtrar por zona si el profesional tiene zona configurada
+        if zona_profesional:
+            trabajos_disponibles = trabajos_disponibles.filter(
+                Q(creador__profile__zona__icontains=zona_profesional) |
+                Q(descripcion__icontains=zona_profesional)
+            )
+        
+        # Mis propuestas enviadas
+        mis_propuestas = Proposal.objects.filter(
+            profesional=request.user
+        ).select_related('oferta', 'oferta__creador').order_by('-fecha_creacion')[:10]
+        
+        # Trabajos en progreso
+        trabajos_en_progreso = JobOffer.objects.filter(
+            status='EN_PROGRESO',
+            profesional_asignado=request.user
+        ).select_related('creador').order_by('-fecha_actualizacion')
+        
+        context.update({
+            'trabajos_disponibles': trabajos_disponibles[:20],
+            'mis_propuestas': mis_propuestas,
+            'trabajos_en_progreso': trabajos_en_progreso,
+            'zona_profesional': zona_profesional,
+        })
+        
+        return render(request, 'usuarios/dashboard_oficio.html', context)
+    
+    # Dashboard para CLIENTE (PERSONA o CONSORCIO): Sus publicaciones
+    elif request.user.profile.tipo_rol in ['PERSONA', 'CONSORCIO']:
+        # Mis publicaciones (ofertas creadas)
+        mis_ofertas = JobOffer.objects.filter(
+            creador=request.user
+        ).annotate(
+            num_propuestas=Count('propuestas')
+        ).order_by('-fecha_creacion')
+        
+        # Estadísticas por estado
+        ofertas_abiertas = mis_ofertas.filter(status='ABIERTA')
+        ofertas_en_progreso = mis_ofertas.filter(status='EN_PROGRESO')
+        ofertas_finalizadas = mis_ofertas.filter(status='FINALIZADA')
+        ofertas_canceladas = mis_ofertas.filter(status='CANCELADA')
+        
+        # Propuestas recibidas pendientes de revisión
+        propuestas_pendientes = Proposal.objects.filter(
+            oferta__creador=request.user,
+            oferta__status='ABIERTA',
+            voto_owner=False
+        ).select_related('profesional', 'profesional__profile', 'oferta').order_by('-fecha_creacion')
+        
+        # Trabajos esperando aprobación/pago
+        trabajos_completados = WorkEvent.objects.filter(
+            oferta__creador=request.user,
+            tipo_evento='TRABAJO_COMPLETADO',
+            oferta__status='EN_PROGRESO'
+        ).select_related('oferta', 'oferta__profesional_asignado').order_by('-fecha_evento')
+        
+        context.update({
+            'mis_ofertas': mis_ofertas[:10],
+            'ofertas_abiertas': ofertas_abiertas,
+            'ofertas_en_progreso': ofertas_en_progreso,
+            'ofertas_finalizadas': ofertas_finalizadas,
+            'ofertas_canceladas': ofertas_canceladas,
+            'propuestas_pendientes': propuestas_pendientes[:10],
+            'trabajos_completados': trabajos_completados[:5],
+            'total_publicaciones': mis_ofertas.count(),
+        })
+        
+        return render(request, 'usuarios/dashboard_cliente.html', context)
+    
+    # Fallback: redirigir a onboarding si el rol no es válido
+    return redirect('usuarios:onboarding_rol')
+
+
+@login_required
 def dashboard(request):
     """
     Dashboard principal del usuario con métricas según su rol.

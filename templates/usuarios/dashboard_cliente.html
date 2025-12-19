@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Cliente - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    }
+
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+        height: 100%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    .stat-card.green { border-left-color: #27ae60; }
+    .stat-card.blue { border-left-color: #3498db; }
+    .stat-card.orange { border-left-color: #f39c12; }
+    .stat-card.red { border-left-color: #e74c3c; }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #2c3e50;
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .oferta-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+
+    .oferta-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .btn-action {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .badge-status {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+        background: white;
+        border-radius: 15px;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+
+    .propuesta-badge {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .quick-actions {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .quick-action-btn {
+        width: 100%;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        background: white;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-weight: 600;
+    }
+
+    .quick-action-btn:hover {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        transform: translateX(5px);
+    }
+
+    .quick-action-btn i {
+        font-size: 1.5rem;
+        color: #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1>
+            <i class="bi bi-house-heart"></i>
+            Dashboard de Cliente
+        </h1>
+        <p class="mb-0">Gestiona tus publicaciones y encuentra profesionales</p>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card green">
+                <div class="stat-label">
+                    <i class="bi bi-megaphone"></i> Abiertas
+                </div>
+                <div class="stat-value">{{ ofertas_abiertas.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card blue">
+                <div class="stat-label">
+                    <i class="bi bi-clock-history"></i> En Progreso
+                </div>
+                <div class="stat-value">{{ ofertas_en_progreso.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card orange">
+                <div class="stat-label">
+                    <i class="bi bi-check-circle"></i> Finalizadas
+                </div>
+                <div class="stat-value">{{ ofertas_finalizadas.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="bi bi-wallet2"></i> Balance
+                </div>
+                <div class="stat-value">{{ wallet.balance_usdc|floatformat:0 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna Principal -->
+        <div class="col-lg-8">
+            <!-- Propuestas Pendientes -->
+            {% if propuestas_pendientes %}
+            <div class="mb-4">
+                <h2 class="section-title">
+                    <i class="bi bi-inbox"></i>
+                    Propuestas Pendientes de Revisión
+                    <span class="propuesta-badge">{{ propuestas_pendientes.count }}</span>
+                </h2>
+                
+                {% for propuesta in propuestas_pendientes %}
+                <div class="oferta-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="mb-1">{{ propuesta.oferta.titulo }}</h5>
+                            <small class="text-muted">
+                                Por: {{ propuesta.profesional.get_full_name|default:propuesta.profesional.username }}
+                                {% if propuesta.profesional.profile.puntuacion %}
+                                    - ⭐ {{ propuesta.profesional.profile.puntuacion|floatformat:1 }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <span class="badge bg-warning">Pendiente</span>
+                    </div>
+                    
+                    <p class="mb-2"><strong>Monto ofrecido:</strong> ${{ propuesta.monto|floatformat:0 }} ARS</p>
+                    <p class="text-muted mb-3">{{ propuesta.mensaje|truncatewords:20 }}</p>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'usuarios:oferta_detalle' propuesta.oferta.id %}" class="btn btn-sm btn-action">
+                            Revisar Propuesta
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Trabajos Completados Pendientes de Aprobación -->
+            {% if trabajos_completados %}
+            <div class="mb-4">
+                <h2 class="section-title">
+                    <i class="bi bi-check2-circle"></i>
+                    Trabajos Esperando tu Aprobación
+                </h2>
+                
+                {% for evento in trabajos_completados %}
+                <div class="oferta-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="mb-1">{{ evento.oferta.titulo }}</h5>
+                            <small class="text-muted">
+                                Profesional: {{ evento.oferta.profesional_asignado.get_full_name|default:evento.oferta.profesional_asignado.username }}
+                            </small>
+                        </div>
+                        <span class="badge bg-info">Completado</span>
+                    </div>
+                    
+                    <p class="text-muted mb-2">
+                        <i class="bi bi-calendar"></i> Marcado como completado: {{ evento.fecha_evento|date:"d/m/Y H:i" }}
+                    </p>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'usuarios:job_detail_private' evento.oferta.id %}" class="btn btn-sm btn-success">
+                            <i class="bi bi-check-lg"></i> Revisar y Aprobar
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Mis Publicaciones -->
+            <div class="mb-4">
+                <h2 class="section-title">
+                    <i class="bi bi-list-ul"></i>
+                    Mis Publicaciones
+                </h2>
+                
+                {% if mis_ofertas %}
+                    {% for oferta in mis_ofertas %}
+                    <div class="oferta-card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h5 class="mb-1">{{ oferta.titulo }}</h5>
+                                <small class="text-muted">Publicado: {{ oferta.fecha_creacion|date:"d/m/Y" }}</small>
+                            </div>
+                            <span class="badge-status 
+                                {% if oferta.status == 'ABIERTA' %}bg-success
+                                {% elif oferta.status == 'EN_PROGRESO' %}bg-primary
+                                {% elif oferta.status == 'FINALIZADA' %}bg-secondary
+                                {% else %}bg-danger{% endif %}">
+                                {{ oferta.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <p class="text-muted mb-3">{{ oferta.descripcion|truncatewords:20 }}</p>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if oferta.presupuesto_ars %}
+                                <span class="badge bg-light text-dark me-2">
+                                    <i class="bi bi-cash"></i> ${{ oferta.presupuesto_ars|floatformat:0 }}
+                                </span>
+                                {% endif %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-people"></i> {{ oferta.num_propuestas }} propuesta{{ oferta.num_propuestas|pluralize }}
+                                </span>
+                            </div>
+                            <a href="{% url 'usuarios:oferta_detalle' oferta.id %}" class="btn btn-sm btn-outline-primary">
+                                Ver Detalles
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No tienes publicaciones</h4>
+                        <p>Crea tu primera oferta de trabajo para comenzar.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Columna Lateral -->
+        <div class="col-lg-4">
+            <!-- Acciones Rápidas -->
+            <div class="mb-4">
+                <h3 class="section-title">
+                    <i class="bi bi-lightning"></i>
+                    Acciones Rápidas
+                </h3>
+                <div class="quick-actions">
+                    <a href="{% url 'usuarios:ofertas_lista' %}" class="quick-action-btn">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Publicar Nuevo Trabajo</span>
+                    </a>
+                    <a href="{% url 'usuarios:wallet_detalle' %}" class="quick-action-btn">
+                        <i class="bi bi-wallet2"></i>
+                        <span>Ver Mi Billetera</span>
+                    </a>
+                    <a href="{% url 'usuarios:public_feed' %}" class="quick-action-btn">
+                        <i class="bi bi-search"></i>
+                        <span>Buscar Profesionales</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Resumen -->
+            <div class="quick-actions">
+                <h5 class="mb-3">
+                    <i class="bi bi-bar-chart"></i>
+                    Resumen
+                </h5>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Publicaciones:</span>
+                    <strong>{{ total_publicaciones }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Propuestas Recibidas:</span>
+                    <strong>{{ propuestas_pendientes.count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>En Progreso:</span>
+                    <strong>{{ ofertas_en_progreso.count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Completados:</span>
+                    <strong>{{ ofertas_finalizadas.count }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

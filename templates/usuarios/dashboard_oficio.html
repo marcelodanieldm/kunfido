@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Profesional - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(79, 172, 254, 0.3);
+    }
+
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid #4facfe;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2c3e50;
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .trabajo-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid #4facfe;
+    }
+
+    .trabajo-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    .badge-zona {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .btn-aplicar {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+
+    .btn-aplicar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+        color: white;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1>
+            <i class="bi bi-tools"></i>
+            Dashboard de Profesional
+        </h1>
+        <p class="mb-0">
+            <i class="bi bi-geo-alt"></i>
+            {% if zona_profesional %}
+                Trabajos en: {{ zona_profesional }}
+            {% else %}
+                Todos los trabajos disponibles
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="bi bi-briefcase"></i> Disponibles
+                </div>
+                <div class="stat-value">{{ trabajos_disponibles.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="bi bi-send"></i> Propuestas
+                </div>
+                <div class="stat-value">{{ mis_propuestas.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="bi bi-clock-history"></i> En Progreso
+                </div>
+                <div class="stat-value">{{ trabajos_en_progreso.count }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="bi bi-wallet2"></i> Balance
+                </div>
+                <div class="stat-value">{{ wallet.balance_usdc|floatformat:0 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trabajos en Progreso -->
+    {% if trabajos_en_progreso %}
+    <div class="mb-5">
+        <h2 class="section-title">
+            <i class="bi bi-hammer"></i>
+            Mis Trabajos en Progreso
+        </h2>
+        {% for trabajo in trabajos_en_progreso %}
+        <div class="trabajo-card">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h4 class="mb-0">{{ trabajo.titulo }}</h4>
+                <span class="badge bg-warning">En Progreso</span>
+            </div>
+            <p class="text-muted mb-2">{{ trabajo.descripcion|truncatewords:20 }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge-zona">
+                        <i class="bi bi-person"></i> {{ trabajo.creador.get_full_name|default:trabajo.creador.username }}
+                    </span>
+                </div>
+                <a href="{% url 'usuarios:job_detail_private' trabajo.id %}" class="btn btn-sm btn-aplicar">
+                    Ver Detalles
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Trabajos Disponibles -->
+    <div class="mb-5">
+        <h2 class="section-title">
+            <i class="bi bi-briefcase"></i>
+            Trabajos Disponibles en tu Zona
+        </h2>
+        
+        {% if trabajos_disponibles %}
+            {% for trabajo in trabajos_disponibles %}
+            <div class="trabajo-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h4 class="mb-1">{{ trabajo.titulo }}</h4>
+                        <small class="text-muted">
+                            Publicado por: {{ trabajo.creador.get_full_name|default:trabajo.creador.username }}
+                        </small>
+                    </div>
+                    <span class="badge bg-success">Abierto</span>
+                </div>
+                
+                <p class="text-muted mb-3">{{ trabajo.descripcion|truncatewords:30 }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if trabajo.presupuesto_ars %}
+                        <span class="badge-zona me-2">
+                            <i class="bi bi-cash"></i> ${{ trabajo.presupuesto_ars|floatformat:0 }} ARS
+                        </span>
+                        {% endif %}
+                        <span class="badge bg-light text-dark">
+                            <i class="bi bi-people"></i> {{ trabajo.num_propuestas }} propuesta{{ trabajo.num_propuestas|pluralize }}
+                        </span>
+                    </div>
+                    <a href="{% url 'usuarios:job_detail_public' trabajo.id %}" class="btn btn-sm btn-aplicar">
+                        Ver y Aplicar
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h4>No hay trabajos disponibles</h4>
+                <p>{% if zona_profesional %}No hay trabajos en tu zona actualmente.{% else %}Configura tu zona en el perfil para ver trabajos cercanos.{% endif %}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Mis Propuestas -->
+    <div class="mb-5">
+        <h2 class="section-title">
+            <i class="bi bi-send"></i>
+            Mis Propuestas Enviadas
+        </h2>
+        
+        {% if mis_propuestas %}
+            {% for propuesta in mis_propuestas %}
+            <div class="trabajo-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h5 class="mb-1">{{ propuesta.oferta.titulo }}</h5>
+                        <small class="text-muted">{{ propuesta.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    {% if propuesta.voto_owner %}
+                        <span class="badge bg-success">Aceptada</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pendiente</span>
+                    {% endif %}
+                </div>
+                
+                <p class="mb-2"><strong>Mi oferta:</strong> ${{ propuesta.monto|floatformat:0 }} ARS</p>
+                <p class="text-muted mb-2">{{ propuesta.mensaje|truncatewords:15 }}</p>
+                
+                <a href="{% url 'usuarios:oferta_detalle' propuesta.oferta.id %}" class="btn btn-sm btn-outline-primary">
+                    Ver Oferta
+                </a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-send"></i>
+                <h4>No has enviado propuestas aún</h4>
+                <p>Explora los trabajos disponibles y envía tu primera propuesta.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

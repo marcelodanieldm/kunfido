@@ -6,6 +6,7 @@ app_name = 'usuarios'
 urlpatterns = [
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard-home/', views.dashboard_home, name='dashboard_home'),
     path('onboarding/', views.onboarding_rol, name='onboarding_rol'),
     
     # Feed Público
