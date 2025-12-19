@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import UserProfile, JobOffer, Proposal
+from .models import UserProfile, JobOffer, Proposal, DelayJustification
 
 
 class UserProfileInline(admin.StackedInline):
@@ -213,6 +213,51 @@ class ProposalAdmin(admin.ModelAdmin):
     get_oferta_titulo.admin_order_field = 'oferta__titulo'
 
 
+@admin.register(DelayJustification)
+class DelayJustificationAdmin(admin.ModelAdmin):
+    """
+    Admin para el modelo DelayJustification.
+    """
+    list_display = (
+        'profesional', 
+        'get_oferta_titulo', 
+        'dias_atraso_justificados', 
+        'penalizacion_omitida',
+        'aceptada_por',
+        'fecha_creacion'
+    )
+    list_filter = ('penalizacion_omitida', 'fecha_creacion', 'fecha_aceptacion')
+    search_fields = (
+        'profesional__username',
+        'profesional__email',
+        'oferta__titulo',
+        'replica'
+    )
+    readonly_fields = ('fecha_creacion', 'fecha_actualizacion', 'fecha_aceptacion')
+    
+    fieldsets = (
+        ('Información Principal', {
+            'fields': ('oferta', 'profesional')
+        }),
+        ('Justificación', {
+            'fields': ('replica', 'dias_atraso_justificados')
+        }),
+        ('Estado de Aceptación', {
+            'fields': ('penalizacion_omitida', 'aceptada_por', 'fecha_aceptacion')
+        }),
+        ('Fechas', {
+            'fields': ('fecha_creacion', 'fecha_actualizacion'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_oferta_titulo(self, obj):
+        """Obtiene el título de la oferta."""
+        return obj.oferta.titulo
+    get_oferta_titulo.short_description = 'Oferta'
+    get_oferta_titulo.admin_order_field = 'oferta__titulo'
+
+
 # Crear instancia del admin site personalizado
 admin_site = KunfidoAdminSite(name='kunfido_admin')
 
@@ -225,3 +270,4 @@ admin_site.register(User, UserAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(JobOffer, JobOfferAdmin)
 admin_site.register(Proposal, ProposalAdmin)
+admin_site.register(DelayJustification, DelayJustificationAdmin)

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 
 
 class UserProfile(models.Model):
@@ -124,6 +125,27 @@ class JobOffer(models.Model):
         verbose_name='Estado'
     )
     
+    fecha_inicio = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Fecha de Inicio',
+        help_text='Fecha en que se inició el trabajo'
+    )
+    
+    fecha_entrega_pactada = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Fecha de Entrega Pactada',
+        help_text='Fecha comprometida para entregar el trabajo'
+    )
+    
+    fecha_entrega_real = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Fecha de Entrega Real',
+        help_text='Fecha en que se entregó el trabajo'
+    )
+    
     fecha_creacion = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Fecha de Creación'
@@ -146,6 +168,31 @@ class JobOffer(models.Model):
     def cantidad_propuestas(self):
         """Retorna la cantidad de propuestas recibidas."""
         return self.propuestas.count()
+    
+    @property
+    def dias_atraso(self):
+        """
+        Calcula los días de atraso del trabajo.
+        Retorna:
+        - None: si no hay fecha de entrega pactada o el trabajo no está finalizado
+        - 0: si se entregó a tiempo o antes
+        - >0: cantidad de días de atraso
+        """
+        if not self.fecha_entrega_pactada:
+            return None
+        
+        # Si el trabajo está finalizado, usar fecha real
+        if self.status == 'FINALIZADA' and self.fecha_entrega_real:
+            fecha_comparacion = self.fecha_entrega_real
+        else:
+            # Si aún no se finalizó, comparar con la fecha actual
+            fecha_comparacion = timezone.now()
+        
+        # Calcular diferencia en días
+        diferencia = (fecha_comparacion - self.fecha_entrega_pactada).days
+        
+        # Retornar 0 si se entregó a tiempo o antes, o los días de atraso
+        return max(0, diferencia)
 
 
 class Proposal(models.Model):
@@ -226,3 +273,85 @@ class Proposal(models.Model):
         if self.pk:  # Si ya existe (es una actualización)
             self.version += 1
         super().save(*args, **kwargs)
+
+
+class DelayJustification(models.Model):
+    """
+    Modelo para que los profesionales (OFICIO) justifiquen atrasos en la entrega.
+    Permite al cliente aceptar o rechazar la justificación.
+    """
+    
+    oferta = models.ForeignKey(
+        JobOffer,
+        on_delete=models.CASCADE,
+        related_name='justificaciones_atraso',
+        verbose_name='Oferta de Trabajo'
+    )
+    
+    profesional = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='justificaciones_enviadas',
+        verbose_name='Profesional'
+    )
+    
+    replica = models.TextField(
+        verbose_name='Réplica/Justificación',
+        help_text='Explicación del profesional sobre el atraso'
+    )
+    
+    dias_atraso_justificados = models.PositiveIntegerField(
+        verbose_name='Días de Atraso',
+        help_text='Cantidad de días de atraso que se están justificando'
+    )
+    
+    penalizacion_omitida = models.BooleanField(
+        default=False,
+        verbose_name='Penalización Omitida',
+        help_text='Indica si el cliente aceptó la justificación y omitió la penalización'
+    )
+    
+    fecha_aceptacion = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Fecha de Aceptación',
+        help_text='Fecha en que el cliente aceptó la justificación'
+    )
+    
+    aceptada_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='justificaciones_aceptadas',
+        verbose_name='Aceptada Por'
+    )
+    
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de Creación'
+    )
+    
+    fecha_actualizacion = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Última Actualización'
+    )
+    
+    class Meta:
+        verbose_name = 'Justificación de Atraso'
+        verbose_name_plural = 'Justificaciones de Atrasos'
+        ordering = ['-fecha_creacion']
+        unique_together = ['oferta', 'profesional']
+    
+    def __str__(self):
+        estado = "Aceptada" if self.penalizacion_omitida else "Pendiente"
+        return f"{self.profesional.username} - {self.oferta.titulo} ({self.dias_atraso_justificados} días) - {estado}"
+    
+    def aceptar_justificacion(self, aceptado_por):
+        """
+        Marca la justificación como aceptada y omite la penalización.
+        """
+        self.penalizacion_omitida = True
+        self.fecha_aceptacion = timezone.now()
+        self.aceptada_por = aceptado_por
+        self.save()

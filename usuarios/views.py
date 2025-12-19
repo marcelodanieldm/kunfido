@@ -2,7 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Min, Avg
-from .models import UserProfile, JobOffer, Proposal
+from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import UserProfile, JobOffer, Proposal, DelayJustification
 
 
 def home(request):
@@ -26,7 +29,55 @@ def dashboard(request):
         messages.info(request, 'Por favor, completa tu perfil seleccionando un tipo de rol.')
         return redirect('usuarios:onboarding_rol')
     
-    return render(request, 'usuarios/dashboard_home.html')
+    context = {}
+    
+    # Dashboard para OFICIO: incluir compromisos con atrasos
+    if request.user.profile.tipo_rol == 'OFICIO':
+        # Obtener trabajos en progreso del profesional
+        # Asumiendo que existe una relación entre Proposal y JobOffer
+        # Buscamos ofertas EN_PROGRESO donde el profesional tiene propuesta aceptada (voto_owner=True)
+        mis_trabajos = JobOffer.objects.filter(
+            status='EN_PROGRESO',
+            propuestas__profesional=request.user,
+            propuestas__voto_owner=True
+        ).distinct().select_related('creador')
+        
+        # Identificar trabajos con atraso
+        trabajos_atrasados = []
+        trabajos_al_dia = []
+        
+        for trabajo in mis_trabajos:
+            if trabajo.dias_atraso and trabajo.dias_atraso > 0:
+                # Verificar si ya tiene justificación
+                try:
+                    justificacion = DelayJustification.objects.get(
+                        oferta=trabajo,
+                        profesional=request.user
+                    )
+                    trabajo.justificacion_existente = justificacion
+                except DelayJustification.DoesNotExist:
+                    trabajo.justificacion_existente = None
+                
+                trabajos_atrasados.append(trabajo)
+            else:
+                trabajos_al_dia.append(trabajo)
+        
+        context['trabajos_atrasados'] = trabajos_atrasados
+        context['trabajos_al_dia'] = trabajos_al_dia
+        context['total_compromisos'] = mis_trabajos.count()
+    
+    # Dashboard para CLIENTE (PERSONA o CONSORCIO): incluir réplicas pendientes
+    elif request.user.profile.tipo_rol in ['PERSONA', 'CONSORCIO']:
+        # Obtener ofertas del cliente con justificaciones pendientes
+        replicas_pendientes = DelayJustification.objects.filter(
+            oferta__creador=request.user,
+            penalizacion_omitida=False  # Solo las que no han sido aceptadas
+        ).select_related('oferta', 'profesional', 'profesional__profile').order_by('-fecha_creacion')
+        
+        context['replicas_pendientes'] = replicas_pendientes
+        context['cantidad_replicas_pendientes'] = replicas_pendientes.count()
+    
+    return render(request, 'usuarios/dashboard_home.html', context)
 
 
 @login_required
@@ -279,3 +330,114 @@ def crear_propuesta(request, oferta_id):
         'es_actualizacion': es_actualizacion,
     }
     return render(request, 'usuarios/crear_propuesta.html', context)
+
+
+@login_required
+def crear_justificacion_atraso(request, oferta_id):
+    """
+    Vista para que el profesional (OFICIO) cree una justificación de atraso.
+    Solo puede haber una justificación por oferta y profesional.
+    """
+    # Verificar que el usuario sea OFICIO
+    if not hasattr(request.user, 'profile') or request.user.profile.tipo_rol != 'OFICIO':
+        messages.error(request, 'Solo los profesionales pueden justificar atrasos.')
+        return redirect('usuarios:public_feed')
+    
+    oferta = get_object_or_404(JobOffer, id=oferta_id)
+    
+    # Calcular días de atraso
+    dias_atraso = oferta.dias_atraso
+    if dias_atraso is None or dias_atraso == 0:
+        messages.error(request, 'Esta oferta no tiene atrasos que justificar.')
+        return redirect('usuarios:job_detail_public', oferta_id=oferta.id)
+    
+    # Verificar si ya existe una justificación
+    try:
+        justificacion = DelayJustification.objects.get(oferta=oferta, profesional=request.user)
+        es_actualizacion = True
+    except DelayJustification.DoesNotExist:
+        justificacion = None
+        es_actualizacion = False
+    
+    if request.method == 'POST':
+        replica = request.POST.get('replica', '').strip()
+        
+        if not replica:
+            messages.error(request, 'Debes escribir una justificación.')
+        else:
+            if es_actualizacion:
+                # Actualizar justificación existente
+                justificacion.replica = replica
+                justificacion.dias_atraso_justificados = dias_atraso
+                justificacion.save()
+                messages.success(request, 'Justificación actualizada exitosamente.')
+            else:
+                # Crear nueva justificación
+                justificacion = DelayJustification.objects.create(
+                    oferta=oferta,
+                    profesional=request.user,
+                    replica=replica,
+                    dias_atraso_justificados=dias_atraso
+                )
+                messages.success(request, 'Justificación enviada exitosamente.')
+            
+            return redirect('usuarios:job_detail_public', oferta_id=oferta.id)
+    
+    context = {
+        'oferta': oferta,
+        'justificacion': justificacion,
+        'es_actualizacion': es_actualizacion,
+        'dias_atraso': dias_atraso,
+    }
+    return render(request, 'usuarios/crear_justificacion_atraso.html', context)
+
+
+@login_required
+@require_POST
+def aceptar_replica_atraso(request, justificacion_id):
+    """
+    Endpoint para que el cliente (dueño de la oferta) acepte la réplica del profesional.
+    Setea el flag penalizacion_omitida=True.
+    """
+    justificacion = get_object_or_404(DelayJustification, id=justificacion_id)
+    
+    # Verificar que el usuario sea el dueño de la oferta
+    if request.user != justificacion.oferta.creador:
+        messages.error(request, 'No tienes permiso para aceptar esta justificación.')
+        return redirect('usuarios:public_feed')
+    
+    # Verificar que no haya sido aceptada previamente
+    if justificacion.penalizacion_omitida:
+        messages.info(request, 'Esta justificación ya fue aceptada anteriormente.')
+    else:
+        # Aceptar la justificación
+        justificacion.aceptar_justificacion(aceptado_por=request.user)
+        messages.success(
+            request, 
+            f'Has aceptado la justificación de {justificacion.profesional.get_full_name() or justificacion.profesional.username}. '
+            f'La penalización por {justificacion.dias_atraso_justificados} días de atraso ha sido omitida.'
+        )
+    
+    return redirect('usuarios:job_detail_private', oferta_id=justificacion.oferta.id)
+
+
+@login_required
+@require_POST
+def rechazar_replica_atraso(request, justificacion_id):
+    """
+    Endpoint para que el cliente rechace la réplica (opcional).
+    La penalización se mantiene activa.
+    """
+    justificacion = get_object_or_404(DelayJustification, id=justificacion_id)
+    
+    # Verificar que el usuario sea el dueño de la oferta
+    if request.user != justificacion.oferta.creador:
+        messages.error(request, 'No tienes permiso para rechazar esta justificación.')
+        return redirect('usuarios:public_feed')
+    
+    messages.info(
+        request,
+        f'Has rechazado la justificación. La penalización por {justificacion.dias_atraso_justificados} días de atraso se mantiene.'
+    )
+    
+    return redirect('usuarios:job_detail_private', oferta_id=justificacion.oferta.id)

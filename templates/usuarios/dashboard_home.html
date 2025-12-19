@@ -113,10 +113,156 @@
         background: #f8f9fa;
         border-radius: 0 10px 10px 0;
     }
+    
+    /* Estilos para trabajos atrasados */
+    .delay-card {
+        border: none;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        box-shadow: 0 5px 20px rgba(255, 107, 107, 0.3);
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    
+    .delay-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+    }
+    
+    .delay-badge {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .on-time-card {
+        border: none;
+        border-radius: 15px;
+        background: white;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Notificación flotante */
+    .floating-notification {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 1050;
+        max-width: 400px;
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        animation: slideInRight 0.5s ease;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .notification-header {
+        background: rgba(255, 255, 255, 0.3);
+        padding: 1rem 1.5rem;
+        border-radius: 15px 15px 0 0;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .notification-body {
+        padding: 1.5rem;
+    }
+    
+    .notification-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .notification-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .close-notification {
+        background: rgba(0,0,0,0.2);
+        border: none;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .close-notification:hover {
+        background: rgba(0,0,0,0.4);
+        transform: rotate(90deg);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Notificación flotante para CLIENTE con réplicas pendientes -->
+{% if user.profile.tipo_rol in 'PERSONA,CONSORCIO' and cantidad_replicas_pendientes > 0 %}
+<div class="floating-notification" id="replicasNotification">
+    <div class="notification-header">
+        <div class="flex-grow-1">
+            <h5 class="mb-0 fw-bold">
+                <i class="bi bi-bell-fill"></i> 
+                Réplicas Pendientes ({{ cantidad_replicas_pendientes }})
+            </h5>
+        </div>
+        <button class="close-notification ms-2" onclick="document.getElementById('replicasNotification').style.display='none'">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+    <div class="notification-body">
+        <p class="mb-3 small">
+            <i class="bi bi-info-circle"></i> 
+            Tienes justificaciones de atraso esperando tu respuesta
+        </p>
+        {% for replica in replicas_pendientes|slice:":3" %}
+        <div class="notification-item">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <strong class="d-block mb-1">{{ replica.oferta.titulo|truncatewords:5 }}</strong>
+                    <small class="text-muted d-block mb-1">
+                        <i class="bi bi-person"></i> {{ replica.profesional.get_full_name|default:replica.profesional.username }}
+                    </small>
+                    <small class="text-danger">
+                        <i class="bi bi-clock"></i> {{ replica.dias_atraso_justificados }} días de atraso
+                    </small>
+                </div>
+                <a href="{% url 'usuarios:job_detail_private' replica.oferta.id %}" 
+                   class="btn btn-sm btn-gradient">
+                    Ver
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if cantidad_replicas_pendientes > 3 %}
+        <div class="text-center mt-3">
+            <small class="text-muted">
+                Y {{ cantidad_replicas_pendientes|add:"-3" }} más...
+            </small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <div class="container py-4">
     <!-- Welcome Card -->
     <div class="welcome-card">
@@ -196,6 +342,152 @@
                 </div>
             </div>
         </div>
+
+        <!-- Sección Mis Compromisos para OFICIO -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clipboard-check"></i> Mis Compromisos
+                        </h5>
+                        <span class="badge bg-primary">{{ total_compromisos }} activos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trabajos Atrasados -->
+        {% if trabajos_atrasados %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-danger mb-3">
+                    <i class="bi bi-exclamation-triangle-fill"></i> 
+                    Trabajos con Atraso ({{ trabajos_atrasados|length }})
+                </h6>
+            </div>
+            {% for trabajo in trabajos_atrasados %}
+            <div class="col-md-6 col-lg-4">
+                <div class="delay-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="fw-bold mb-0">{{ trabajo.titulo|truncatewords:6 }}</h6>
+                            <span class="delay-badge">
+                                <i class="bi bi-clock"></i> {{ trabajo.dias_atraso }} días
+                            </span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="d-block opacity-75">
+                                <i class="bi bi-person"></i> 
+                                {{ trabajo.creador.get_full_name|default:trabajo.creador.username }}
+                            </small>
+                            <small class="d-block opacity-75">
+                                <i class="bi bi-geo-alt"></i> {{ trabajo.zona }}
+                            </small>
+                            {% if trabajo.fecha_entrega_pactada %}
+                            <small class="d-block opacity-75">
+                                <i class="bi bi-calendar-x"></i> 
+                                Entrega: {{ trabajo.fecha_entrega_pactada|date:"d/m/Y" }}
+                            </small>
+                            {% endif %}
+                        </div>
+
+                        {% if trabajo.justificacion_existente %}
+                            <!-- Ya tiene justificación -->
+                            <div class="alert alert-light mb-3 py-2 px-3">
+                                <small>
+                                    <i class="bi bi-info-circle"></i>
+                                    {% if trabajo.justificacion_existente.penalizacion_omitida %}
+                                        <strong class="text-success">✓ Justificación aceptada</strong>
+                                    {% else %}
+                                        <strong class="text-warning">⏳ Justificación pendiente</strong>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <a href="{% url 'usuarios:crear_justificacion_atraso' trabajo.id %}" 
+                               class="btn btn-light btn-sm w-100">
+                                <i class="bi bi-pencil"></i> Actualizar Justificación
+                            </a>
+                        {% else %}
+                            <!-- No tiene justificación -->
+                            <a href="{% url 'usuarios:crear_justificacion_atraso' trabajo.id %}" 
+                               class="btn btn-light btn-lg w-100">
+                                <i class="bi bi-chat-left-text"></i> Explicar Demora
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Trabajos al Día -->
+        {% if trabajos_al_dia %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="text-success mb-3">
+                    <i class="bi bi-check-circle-fill"></i> 
+                    Trabajos al Día ({{ trabajos_al_dia|length }})
+                </h6>
+            </div>
+            {% for trabajo in trabajos_al_dia %}
+            <div class="col-md-6 col-lg-4">
+                <div class="on-time-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h6 class="fw-bold mb-0">{{ trabajo.titulo|truncatewords:6 }}</h6>
+                            <span class="badge bg-success">
+                                <i class="bi bi-check"></i> Al día
+                            </span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted d-block">
+                                <i class="bi bi-person"></i> 
+                                {{ trabajo.creador.get_full_name|default:trabajo.creador.username }}
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-geo-alt"></i> {{ trabajo.zona }}
+                            </small>
+                            {% if trabajo.fecha_entrega_pactada %}
+                            <small class="text-muted d-block">
+                                <i class="bi bi-calendar-check"></i> 
+                                Entrega: {{ trabajo.fecha_entrega_pactada|date:"d/m/Y" }}
+                            </small>
+                            {% endif %}
+                        </div>
+
+                        <a href="{% url 'usuarios:job_detail_public' trabajo.id %}" 
+                           class="btn btn-outline-primary btn-sm w-100">
+                            <i class="bi bi-eye"></i> Ver Detalles
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not trabajos_atrasados and not trabajos_al_dia %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card text-center py-5">
+                    <div class="card-body">
+                        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3 text-muted">No tienes compromisos activos</h5>
+                        <p class="text-muted">
+                            Comienza a enviar propuestas para ganar trabajos
+                        </p>
+                        <a href="{% url 'usuarios:public_feed' %}" class="btn btn-gradient mt-2">
+                            <i class="bi bi-search"></i> Buscar Trabajos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Sección de acciones rápidas para OFICIO -->
         <div class="row mb-4">
@@ -287,10 +579,10 @@
                 <div class="card metric-card">
                     <div class="card-body text-center">
                         <div class="metric-icon warning mx-auto">
-                            <i class="bi bi-people-fill"></i>
+                            <i class="bi bi-bell-fill"></i>
                         </div>
-                        <div class="metric-value text-warning">48</div>
-                        <div class="metric-label">Proveedores Activos</div>
+                        <div class="metric-value text-warning">{{ cantidad_replicas_pendientes|default:0 }}</div>
+                        <div class="metric-label">Réplicas Pendientes</div>
                     </div>
                 </div>
             </div>
@@ -306,6 +598,76 @@
                 </div>
             </div>
         </div>
+
+        <!-- Réplicas Pendientes para CONSORCIO -->
+        {% if replicas_pendientes %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle-fill"></i> 
+                            Justificaciones de Atraso Pendientes ({{ cantidad_replicas_pendientes }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">
+                            Los siguientes profesionales han enviado justificaciones por atrasos en obras del edificio. 
+                            Revisa y decide si aceptas o rechazas cada explicación.
+                        </p>
+                        
+                        {% for replica in replicas_pendientes %}
+                        <div class="alert alert-light border-start border-warning border-4 mb-3">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-2">
+                                        <i class="bi bi-building-gear"></i> {{ replica.oferta.titulo }}
+                                    </h6>
+                                    <p class="mb-2 small">
+                                        <strong>
+                                            <i class="bi bi-person"></i> 
+                                            {{ replica.profesional.get_full_name|default:replica.profesional.username }}
+                                        </strong>
+                                    </p>
+                                    <p class="mb-2 small text-danger">
+                                        <i class="bi bi-clock"></i> 
+                                        <strong>{{ replica.dias_atraso_justificados }} días de atraso</strong>
+                                    </p>
+                                    <p class="mb-2 small text-muted">
+                                        <i class="bi bi-chat-left-quote"></i> 
+                                        {{ replica.replica|truncatewords:20 }}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i> 
+                                        Enviado el {{ replica.fecha_creacion|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <a href="{% url 'usuarios:job_detail_private' replica.oferta.id %}" 
+                                       class="btn btn-primary mb-2 w-100">
+                                        <i class="bi bi-eye"></i> Ver Detalles Completos
+                                    </a>
+                                    <form method="post" action="{% url 'usuarios:aceptar_replica_atraso' replica.id %}" class="d-inline w-100">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success mb-2 w-100">
+                                            <i class="bi bi-check-circle"></i> Aceptar Justificación
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'usuarios:rechazar_replica_atraso' replica.id %}" class="d-inline w-100">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger w-100">
+                                            <i class="bi bi-x-circle"></i> Rechazar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Sección de acciones rápidas para CONSORCIO -->
         <div class="row mb-4">
@@ -397,10 +759,10 @@
                 <div class="card metric-card">
                     <div class="card-body text-center">
                         <div class="metric-icon warning mx-auto">
-                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-bell-fill"></i>
                         </div>
-                        <div class="metric-value text-warning">5</div>
-                        <div class="metric-label">Profesionales Favoritos</div>
+                        <div class="metric-value text-warning">{{ cantidad_replicas_pendientes|default:0 }}</div>
+                        <div class="metric-label">Réplicas Pendientes</div>
                     </div>
                 </div>
             </div>
@@ -416,6 +778,76 @@
                 </div>
             </div>
         </div>
+
+        <!-- Réplicas Pendientes -->
+        {% if replicas_pendientes %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-exclamation-triangle-fill"></i> 
+                            Justificaciones de Atraso Pendientes ({{ cantidad_replicas_pendientes }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">
+                            Los siguientes profesionales han enviado justificaciones por atrasos. 
+                            Revisa y decide si aceptas o rechazas cada explicación.
+                        </p>
+                        
+                        {% for replica in replicas_pendientes %}
+                        <div class="alert alert-light border-start border-warning border-4 mb-3">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-2">
+                                        <i class="bi bi-briefcase"></i> {{ replica.oferta.titulo }}
+                                    </h6>
+                                    <p class="mb-2 small">
+                                        <strong>
+                                            <i class="bi bi-person"></i> 
+                                            {{ replica.profesional.get_full_name|default:replica.profesional.username }}
+                                        </strong>
+                                    </p>
+                                    <p class="mb-2 small text-danger">
+                                        <i class="bi bi-clock"></i> 
+                                        <strong>{{ replica.dias_atraso_justificados }} días de atraso</strong>
+                                    </p>
+                                    <p class="mb-2 small text-muted">
+                                        <i class="bi bi-chat-left-quote"></i> 
+                                        {{ replica.replica|truncatewords:20 }}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i> 
+                                        Enviado el {{ replica.fecha_creacion|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <a href="{% url 'usuarios:job_detail_private' replica.oferta.id %}" 
+                                       class="btn btn-primary mb-2 w-100">
+                                        <i class="bi bi-eye"></i> Ver Detalles Completos
+                                    </a>
+                                    <form method="post" action="{% url 'usuarios:aceptar_replica_atraso' replica.id %}" class="d-inline w-100">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success mb-2 w-100">
+                                            <i class="bi bi-check-circle"></i> Aceptar Justificación
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'usuarios:rechazar_replica_atraso' replica.id %}" class="d-inline w-100">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger w-100">
+                                            <i class="bi bi-x-circle"></i> Rechazar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Sección de acciones rápidas para PERSONA -->
         <div class="row mb-4">

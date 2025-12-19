@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Justificar Atraso - {{ oferta.titulo }} - Kunfido{% endblock %}
+
+{% block extra_css %}
+<style>
+    .justification-hero {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        padding: 2rem;
+    }
+    
+    .alert-delay {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-left: 4px solid #ff9800;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .info-box {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:public_feed' %}">Trabajos</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'usuarios:job_detail_public' oferta.id %}">{{ oferta.titulo }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Justificar Atraso</li>
+        </ol>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="justification-hero">
+        <div class="row align-items-center">
+            <div class="col-md-9">
+                <h1 class="display-6 fw-bold mb-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Justificar Atraso
+                </h1>
+                <p class="mb-0 opacity-75">{{ oferta.titulo }}</p>
+            </div>
+            <div class="col-md-3 text-md-end mt-3 mt-md-0">
+                <div class="bg-white text-dark rounded-3 p-3">
+                    <div class="fs-1 fw-bold text-danger">{{ dias_atraso }}</div>
+                    <small class="text-muted">días de atraso</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert-delay">
+        <h5 class="mb-3">
+            <i class="bi bi-info-circle-fill"></i> ¿Por qué justificar el atraso?
+        </h5>
+        <p class="mb-2">
+            Cuando un trabajo presenta atraso en la entrega, esto puede afectar tu reputación y puntuación en la plataforma.
+            Al justificar el atraso de manera clara y honesta:
+        </p>
+        <ul class="mb-0">
+            <li>El cliente puede entender mejor la situación</li>
+            <li>Si el cliente acepta tu justificación, la penalización será omitida</li>
+            <li>Demuestras profesionalismo y transparencia</li>
+            <li>Mantienes una buena relación con el cliente</li>
+        </ul>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Formulario -->
+            <div class="form-card">
+                <h3 class="mb-4">
+                    {% if es_actualizacion %}
+                        <i class="bi bi-pencil-square text-warning"></i> Actualizar Justificación
+                    {% else %}
+                        <i class="bi bi-send text-primary"></i> Enviar Justificación
+                    {% endif %}
+                </h3>
+
+                {% if es_actualizacion %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Ya has enviado una justificación anteriormente. Puedes actualizarla si lo deseas.
+                    </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="replica" class="form-label fw-bold">
+                            <i class="bi bi-chat-left-text"></i> Explicación del Atraso <span class="text-danger">*</span>
+                        </label>
+                        <textarea 
+                            name="replica" 
+                            id="replica" 
+                            class="form-control" 
+                            rows="8" 
+                            required
+                            placeholder="Explica de manera detallada y honesta las razones del atraso. Por ejemplo: problemas técnicos, retrasos en materiales, situaciones imprevistas, etc."
+                        >{% if justificacion %}{{ justificacion.replica }}{% endif %}</textarea>
+                        <small class="form-text text-muted">
+                            Sé claro, honesto y profesional. Una buena justificación aumenta las probabilidades de que sea aceptada.
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-gradient btn-lg px-5">
+                            <i class="bi bi-send"></i> 
+                            {% if es_actualizacion %}Actualizar Justificación{% else %}Enviar Justificación{% endif %}
+                        </button>
+                        <a href="{% url 'usuarios:job_detail_public' oferta.id %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Información del Trabajo -->
+            <div class="info-box">
+                <h5 class="mb-3">
+                    <i class="bi bi-briefcase text-primary"></i> Información del Trabajo
+                </h5>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Cliente:</small>
+                    <strong>{{ oferta.creador.get_full_name|default:oferta.creador.username }}</strong>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Presupuesto:</small>
+                    <strong>${{ oferta.presupuesto_ars|floatformat:0 }} ARS</strong>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted d-block">Zona:</small>
+                    <strong>{{ oferta.zona }}</strong>
+                </div>
+
+                {% if oferta.fecha_entrega_pactada %}
+                <div class="mb-3">
+                    <small class="text-muted d-block">Fecha Pactada:</small>
+                    <strong>{{ oferta.fecha_entrega_pactada|date:"d/m/Y" }}</strong>
+                </div>
+                {% endif %}
+
+                <div class="mb-0">
+                    <small class="text-muted d-block">Días de Atraso:</small>
+                    <strong class="text-danger fs-4">{{ dias_atraso }} días</strong>
+                </div>
+            </div>
+
+            <!-- Consejos -->
+            <div class="info-box">
+                <h5 class="mb-3">
+                    <i class="bi bi-lightbulb text-warning"></i> Consejos
+                </h5>
+                <ul class="small mb-0">
+                    <li class="mb-2">Sé específico sobre las causas del atraso</li>
+                    <li class="mb-2">Muestra empatía por las molestias causadas</li>
+                    <li class="mb-2">Si es posible, ofrece compensación o mejoras</li>
+                    <li class="mb-2">Indica cuándo podrás completar el trabajo</li>
+                    <li class="mb-0">Mantén un tono profesional y respetuoso</li>
+                </ul>
+            </div>
+
+            {% if justificacion %}
+            <!-- Estado de la Justificación -->
+            <div class="info-box {% if justificacion.penalizacion_omitida %}border-success{% endif %}">
+                <h5 class="mb-3">
+                    <i class="bi bi-info-circle {% if justificacion.penalizacion_omitida %}text-success{% else %}text-warning{% endif %}"></i> 
+                    Estado de la Justificación
+                </h5>
+                
+                {% if justificacion.penalizacion_omitida %}
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <strong>Aceptada</strong><br>
+                        El cliente ha aceptado tu justificación.<br>
+                        <small class="text-muted">
+                            Aceptada el {{ justificacion.fecha_aceptacion|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-hourglass-split"></i>
+                        <strong>Pendiente</strong><br>
+                        Esperando respuesta del cliente.
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

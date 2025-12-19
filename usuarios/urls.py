@@ -20,4 +20,9 @@ urlpatterns = [
     
     # Votación
     path('propuestas/<int:propuesta_id>/votar/', views.votar_propuesta, name='votar_propuesta'),
+    
+    # Justificaciones de Atraso
+    path('ofertas/<int:oferta_id>/justificar-atraso/', views.crear_justificacion_atraso, name='crear_justificacion_atraso'),
+    path('justificaciones/<int:justificacion_id>/aceptar/', views.aceptar_replica_atraso, name='aceptar_replica_atraso'),
+    path('justificaciones/<int:justificacion_id>/rechazar/', views.rechazar_replica_atraso, name='rechazar_replica_atraso'),
 ]
