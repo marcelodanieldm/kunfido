@@ -146,6 +146,23 @@
         margin-bottom: 1.5rem;
     }
     
+    /* Botón especial para explicar demora */
+    .delay-card .btn-light {
+        background: white;
+        border: none;
+        color: #dc3545;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .delay-card .btn-light:hover {
+        background: #fff;
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        color: #c82333;
+    }
+    
     /* Notificación flotante */
     .floating-notification {
         position: fixed;
@@ -156,7 +173,7 @@
         background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
         border-radius: 15px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        animation: slideInRight 0.5s ease;
+        animation: slideInRight 0.5s ease, pulse 2s infinite;
     }
     
     @keyframes slideInRight {
@@ -167,6 +184,15 @@
         to {
             transform: translateX(0);
             opacity: 1;
+        }
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        50% {
+            box-shadow: 0 10px 40px rgba(252, 182, 159, 0.6);
         }
     }
     
@@ -412,8 +438,8 @@
                         {% else %}
                             <!-- No tiene justificación -->
                             <a href="{% url 'usuarios:crear_justificacion_atraso' trabajo.id %}" 
-                               class="btn btn-light btn-lg w-100">
-                                <i class="bi bi-chat-left-text"></i> Explicar Demora
+                               class="btn btn-light btn-lg w-100 fw-bold">
+                                <i class="bi bi-chat-left-text-fill"></i> Explicar Demora
                             </a>
                         {% endif %}
                     </div>
